@@ -1,0 +1,20 @@
+{
+  "style": "Sanskrit devotional mantra recitation, close clear solo voice, quick natural syllabic delivery, lightly intoned speech, narrow pitch range, continuous four-line chant, minimal accompaniment, very quiet tanpura drone, dry intimate vocal, voice begins immediately, no percussion, no instrumental introduction, no long held vowels, no melisma, no instrumental breaks",
+  "lyrics": "[Chorus]\nॐ कृष्णाय वासुदेवाय\nहरये परमात्मने\nप्रणतः क्लेशनाशाय\nगोविंदाय नमो नमः",
+  "cot": "off",
+  "duration": 20.0,
+  "lm_seed": 44,
+  "seed": 44,
+  "steps": 32,
+  "lm_batch_size": 1,
+  "synth_batch_size": 1,
+  "cfg_scale": 1.0,
+  "output_format": "wav16",
+  "abc_sampling": {
+    "max_tokens": 1024
+  },
+  "semantic_sampling": {
+    "min_tokens": 200,
+    "max_tokens": 500
+  }
+}

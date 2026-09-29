@@ -1,0 +1,21 @@
+{
+  "style": "Rhythmic Hindu devotional chant, Sanskrit mantra, clear forward solo vocal, syllabic singing, compact four-line mantra, steady 120 BPM, light tabla, manjira, harmonium, vocals on the first beat, short notes, continuous vocal phrasing, no instrumental introduction, no long vocal runs, no instrumental solos",
+  "lyrics": "[Chorus]\nॐ कृष्णाय वासुदेवाय\nहरये परमात्मने\nप्रणतः क्लेशनाशाय\nगोविंदाय नमो नमः",
+  "cot": "melody",
+  "duration": 20.0,
+  "lm_seed": 43,
+  "seed": 43,
+  "steps": 32,
+  "lm_batch_size": 1,
+  "synth_batch_size": 1,
+  "cfg_scale": 1.0,
+  "output_format": "wav16",
+  "abc_sampling": {
+    "max_tokens": 1024
+  },
+  "semantic_sampling": {
+    "min_tokens": 350,
+    "max_tokens": 500
+  },
+  "abc": "X:1\nT:Compact devotional chant\nM:4/4\nL:1/8\nQ:1/4=120\nV: Vocal clef=treble name=\"Vocal Melody\" snm=\"Vocal\"\nV: Ins clef=treble name=\"Ins Melody\" snm=\"Inst.\"\nK:Dm\n% chorus\nV: Vocal\nD2 D2 F2 E2|D2 E2 F2 D2|F2 F2 G2 F2|E2 D2 E2 D2|D2 F2 A2 G2|F2 E2 F2 D2|F2 E2 D2 C2|D2 E2 D2 D2|\nV: Ins\nZ8|\n"
+}

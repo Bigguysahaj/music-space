@@ -1,0 +1,20 @@
+{
+  "style": "Sanskrit devotional mantra recitation, close clear solo voice, quick natural syllabic delivery, lightly intoned speech, narrow pitch range, continuous four-line chant, minimal accompaniment, very quiet tanpura drone, dry intimate vocal, voice begins immediately, no percussion, no instrumental introduction, no long held vowels, no melisma, no instrumental breaks",
+  "lyrics": "[Chorus]\nOm Krishnaaya Vaasudevaaya\nHaraye Paramaatmane\nPranatah Klesha Naashaaya\nGovindaaya Namo Namah\n\n[Chorus]\nOm Krishnaaya Vaasudevaaya\nHaraye Paramaatmane\nPranatah Klesha Naashaaya\nGovindaaya Namo Namah",
+  "cot": "off",
+  "duration": 35.0,
+  "lm_seed": 45,
+  "seed": 45,
+  "steps": 32,
+  "lm_batch_size": 1,
+  "synth_batch_size": 1,
+  "cfg_scale": 1.2,
+  "output_format": "wav16",
+  "abc_sampling": {
+    "max_tokens": 1024
+  },
+  "semantic_sampling": {
+    "min_tokens": 750,
+    "max_tokens": 875
+  }
+}

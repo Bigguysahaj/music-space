@@ -1,0 +1,12 @@
+.tools/
+downloads/
+models/
+vendor/
+outputs/
+logs/
+cloudflare/.dev.vars
+cloudflare/.wrangler/
+cloudflare/.auth.env
+cloudflare/.local-secrets.json
+__pycache__/
+*.pyc

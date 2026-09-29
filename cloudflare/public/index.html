@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#FAF4E7">
+  <title>Raagspace · Plant a sound</title>
+  <link rel="stylesheet" href="/assets/garden.css">
+</head>
+<body>
+  <svg style="display:none" aria-hidden="true"><symbol id="i-person" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8"/></symbol></svg>
+  <div class="garden garden-left" aria-hidden="true"></div><div class="garden garden-right" aria-hidden="true"></div>
+  <header><a class="brand" href="#create"><img src="/assets/raagspace-mark.svg" alt="" width="36" height="36">RAAGSPACE</a><nav aria-label="Main navigation"><a href="#create">Create</a><a href="#library">My music</a></nav></header>
+  <section class="panel" id="login-panel">
+    <h2>Sign in</h2>
+    <form id="login-form"><label for="password">Access password</label><input id="password" type="password" autocomplete="current-password" required><p><button>Continue</button></p><p class="error" id="login-error"></p></form>
+  </section>
+  <main id="app" class="hidden">
+    <div class="studio"><section class="composer" id="create">
+      <h1>Plant a sound.</h1><p class="intro">Describe a feeling, and let it grow.</p>
+      <form id="generate-form">
+        <label for="style">What would you like to hear?</label><textarea id="style" required>Gentle devotional mantra, calm and reverent</textarea>
+        <div class="basic-row"><div><label for="voice-grid">Voice</label><select id="voice-grid" name="voice"></select></div><div><label for="duration">Length · seconds</label><input id="duration" type="number" min="5" max="120" value="20" required></div></div>
+        <details class="adv" id="lyrics-details"><summary>Add lyrics or mantra <span id="lyrics-added" class="muted">· Added</span></summary>        <label for="lyrics">Lyrics</label><textarea id="lyrics" required>Om Krishnaaya Vaasudevaaya
+Haraye Paramaatmane
+Pranatah Klesha Naashaaya
+Govindaaya Namo Namah</textarea>
+
+</details>
+        <details class="adv" id="sound-options"><summary>More sound options</summary>
+        <label for="quality">Recording feel</label>
+        <select id="quality">
+          <option value="studio" selected>Studio — clean, pristine, professional mic</option>
+          <option value="conversational">Conversational — close, warm, natural speaking tone</option>
+          <option value="phone">Phone call — narrowband, compressed, small-speaker</option>
+          <option value="live">Live room — natural reverberant space, mic distance</option>
+          <option value="lofi">Lo-fi tape — warm cassette saturation, faint hiss</option>
+        </select>
+
+        <label for="background">Backing music</label>
+        <select id="background">
+          <option value="none" selected>Voice only — no music at all</option>
+          <option value="ambience">Normal ambience — a bare hint of atmosphere</option>
+          <option value="acoustic">Acoustic accompaniment — soft tanpura / harmonium</option>
+        </select>
+
+        <label for="singing">Singing style</label>
+        <div class="singing-row">
+          <input id="singing" type="range" min="0" max="2" step="1" value="1">
+          <div class="singing-labels"><span>Rhythmic / spoken</span><span>Balanced</span><span>Melodic / singing</span></div>
+          <div class="singing-current" id="singing-label"></div>
+        </div>
+        <p class="hint">Choose spoken recitation, a light tune, or expressive singing. These are creative directions; results may vary.</p>
+
+        <details class="adv" id="score-details">
+          <summary>Melody (advanced)</summary>
+          <p class="hint">By default the engine invents the melody as it sings. Draft one first to see it and fix problems — like the singing starting late — before spending a full take on it.</p>
+
+          <label for="melody-preset">Melody character</label>
+          <select id="melody-preset"></select>
+          <p class="hint">Nudges the draft toward the feel of a well-known bhakti/aarti tune — tonality, tempo, and phrasing, not a note-for-note copy. Combine with Draft a melody below, then hand-edit the score if you want it closer to a tune you have in your head.</p>
+          <p class="hidden" id="verified-score-row">
+            <button type="button" id="load-verified-score" class="muted" style="background:transparent;border:1px solid #a9e8bb;color:#aff3c6"></button>
+            <span class="hint" id="verified-score-hint" style="display:block;margin-top:4px">Hand-transcribed and test-generated, not model-invented. Loads the score only — your lyrics below are left as they are. Note: this score's notes are aligned syllable-by-syllable to its own original lyrics, so pairing it with different lyrics will likely put the wrong number of syllables under some phrases. <a href="#" id="load-verified-lyrics-too" style="color:#aff3c6">Load the matching lyrics too</a>.</span>
+          </p>
+
+          <p class="row" style="align-items:center">
+            <button type="button" id="plan-button">Draft a melody</button>
+            <span class="muted" id="plan-status"></span>
+          </p>
+          <label for="abc-score">Score (ABC notation)</label>
+          <textarea id="abc-score" placeholder="Empty = let the model invent the melody while it sings." style="min-height:110px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px"></textarea>
+          <p class="hint">
+            Bars are separated by <code>|</code>. <code>z</code>/<code>Z</code> is a rest, a number after a note or
+            rest multiplies its length. Letters <code>A</code>–<code>G</code> are notes, lowercase = one octave
+            higher. <code>V: Vocal</code> / <code>V: Ins</code> switch which line you're editing — delete leading
+            <code>Z</code> rests under <code>V: Vocal</code> to make the voice come in sooner.
+          </p>
+          <p><button type="button" id="clear-score-button" class="muted" style="background:transparent;border:1px solid #40564a;color:#c4d3c9">Clear (let the model plan it)</button></p>
+          <p class="error hidden" id="score-warning">Singing style is set to "Rhythmic / spoken", which skips the score entirely — this text will be ignored. Move the slider to Balanced or Melodic to use it.</p>
+        </details>
+
+        <details class="adv">
+          <summary>Advanced</summary>
+          <div class="adv-row">
+            <div>
+              <label for="cfg-scale">Prompt strength (CFG scale)</label>
+              <input id="cfg-scale" type="range" min="0.5" max="3" step="0.1" value="1.0">
+              <div class="range-value" id="cfg-scale-value">1.0</div>
+              <p class="hint">Lower = looser, more creative, drifts more from the prompt. Higher = more literal, more tightly constrained to it.</p>
+            </div>
+          </div>
+          <div class="adv-row">
+            <div>
+              <label for="steps">Refinement steps</label>
+              <input id="steps" type="number" min="1" max="64" step="1" value="32">
+              <p class="hint">More steps: smoother, slower. Fewer: faster, rougher.</p>
+            </div>
+            <div>
+              <label for="seed">Seed</label>
+              <input id="seed" type="number" step="1" value="-1">
+              <p class="hint">-1 picks a new random take each time. A fixed number reproduces the same take with these settings.</p>
+            </div>
+          </div>
+          <label>Full prompt sent to the model</label>
+          <div id="prompt-preview"></div>
+        </details>
+        </details><button id="generate-button" type="submit">Create music</button><p class="error" id="generate-error" role="alert"></p>
+      </form>
+      <p class="notice">Keep your music computer connected and its bridge running to create a track. Your finished audio is saved in your private library.</p>
+    </section>
+    <aside class="listener panel" aria-labelledby="creation-heading"><h2 id="creation-heading">Your creation</h2><div class="cover" aria-hidden="true"><img src="/assets/botanical-corner.svg" alt=""></div><div id="creation"><h3>Your music will appear here</h3><p class="muted">A little space for your next sound.</p></div></aside></div>
+    <section class="panel library" id="library"><h2>Your music</h2><p id="connection-status" class="muted" role="status"></p><div id="jobs"><p class="muted">Loading…</p></div></section>
+  </main>
+  <script>
+    const key = 'music-space-password';
+    const loginPanel = document.querySelector('#login-panel');
+    const app = document.querySelector('#app');
+    const auth = () => ({ Authorization: `Bearer ${sessionStorage.getItem(key) || ''}` });
+    async function api(path, options = {}) {
+      const response = await fetch(path, { ...options, headers: { ...auth(), ...(options.headers || {}) } });
+      if (response.status === 401) { sessionStorage.removeItem(key); showLogin(); throw new Error('Please sign in again.'); }
+      if (!response.ok) { const body = await response.json().catch(() => ({})); throw new Error(body.error || `Request failed (${response.status})`); }
+      return response;
+    }
+    function showLogin() { loginPanel.classList.remove('hidden'); app.classList.add('hidden'); }
+
+    // --- Voice / quality / background / singing presets -----------------
+    // These compose into the "style" prompt sent to the model. The engine
+    // (yue2.cpp) takes free-text style + lyrics plus a handful of numeric
+    // fields; there is no separate negative-prompt or timbre parameter, so
+    // quality/personality/background are all expressed as detailed natural-
+    // language descriptors here. "cot" (off/melody/full) is a real engine
+    // field and is the one true tunable behind the singing-style slider.
+    const VOICES = [
+      { id: 'girl-young', label: 'Young girl (~6)', group: 'girl',
+        text: "young girl's voice, small child around six years old, high delicate pitch, light airy timbre, innocent unguarded tone, slightly uneven childlike diction, bright and sweet, gentle breathiness, no vocal strain" },
+      { id: 'girl-tween', label: 'Girl, tween (~10)', group: 'girl',
+        text: "girl's voice, tween around ten years old, clear bright pitch, playful energetic timbre, confident enunciation, youthful sparkle, light natural vibrato, cheerful expressive tone" },
+      { id: 'boy-young', label: 'Young boy (~6)', group: 'boy',
+        text: "young boy's voice, small child around six years old, high unbroken pitch, soft rounded timbre, innocent curious tone, gentle lisping diction, warm and sweet, unforced delivery" },
+      { id: 'boy-tween', label: 'Boy, pre-teen (~10)', group: 'boy',
+        text: "boy's voice, pre-adolescent around ten years old, clear steady pitch still unbroken, bright forward timbre, earnest confident tone, crisp diction, boyish energy without huskiness" },
+      { id: 'woman-young', label: 'Woman, youthful soprano', group: 'woman',
+        text: "young adult woman's voice, soprano range, youthful bright timbre, sweet clear tone, soft breathy edge, delicate and calming, gentle vibrato, warm feminine resonance, unhurried graceful phrasing" },
+      { id: 'woman-mature', label: 'Woman, mezzo-alto', group: 'woman',
+        text: "adult woman's voice, mezzo-soprano range, warm rounded timbre, grounded confident tone, rich chest resonance, subtle huskiness, calm authoritative warmth, smooth even delivery" },
+      { id: 'woman-elder', label: 'Woman, elder contralto', group: 'woman',
+        text: "older woman's voice, contralto range, warm weathered timbre, gentle rasp of age, slow deliberate phrasing, wise and comforting tone, soft breath support, nurturing grandmotherly warmth" },
+      { id: 'man-young', label: 'Man, youthful tenor', group: 'man',
+        text: "young adult man's voice, tenor range, bright clear timbre, warm approachable tone, light natural resonance, smooth even diction, gentle energetic delivery, minimal vocal weight" },
+      { id: 'man-mature', label: 'Man, baritone', group: 'man',
+        text: "adult man's voice, baritone range, deep resonant timbre, warm grounded chest tone, confident measured phrasing, subtle gravel, calm authoritative presence, full-bodied resonance" },
+      { id: 'man-elder', label: 'Man, elder bass', group: 'man',
+        text: "older man's voice, bass-baritone range, deep weathered timbre, slow gravelly resonance, wise and weary warmth, soft breathiness of age, unhurried contemplative phrasing, deep grounding presence" },
+    ];
+    const QUALITIES = {
+      studio: "studio-quality vocal recording, close-mic condenser microphone, pristine clarity, negligible noise floor, professional vocal chain, crisp detailed high frequencies, controlled proximity effect, no background noise",
+      conversational: "close conversational mic tone, natural relaxed speaking presence, warm intimate proximity, minimal processing, subtle room tone, mid-range focused clarity",
+      phone: "telephone call audio quality, narrowband band-limited frequency response, compressed dynamic range, mono presence, faint line noise, small speaker playback character, reduced low and high end",
+      live: "live room vocal recording, natural reverberant acoustic space, audible room reflections, slight mic distance, organic unprocessed character, gentle air around the voice",
+      lofi: "lo-fi cassette tape recording, warm analog tape saturation, soft high-frequency roll-off, gentle wow and flutter, faint background tape hiss, nostalgic worn character",
+    };
+    const BACKGROUNDS = {
+      none: "unaccompanied solo a cappella voice, absolutely no instruments, no percussion, no drone, no pads, no synthesizers, no backing music of any kind, no reverb tail, dry pure vocal only, silence beneath the voice",
+      ambience: "very light natural ambience beneath the voice, a barely audible sustained drone or soft pad, no rhythmic percussion, no melodic instrument lines, subtle atmospheric space that stays out of the way of the voice",
+      acoustic: "gentle acoustic accompaniment, soft tanpura or harmonium played quietly beneath the voice, warm unplugged instrumentation, no electronic synths, no drum kit, accompaniment supportive and quiet, vocal remains clearly upfront",
+    };
+    const SINGING = [
+      { label: 'Rhythmic / spoken', cot: 'off', text: "rhythmic spoken-word delivery, chant-like recitation, minimal pitch variation, syllables land on the beat, speech-forward rather than sung" },
+      { label: 'Balanced', cot: 'melody', text: "lightly melodic delivery, gentle singable tune, moderate pitch movement, phrasing that sits between chant and song" },
+      { label: 'Melodic / singing', cot: 'full', text: "fully melodic sung delivery, expressive singing voice with a clear memorable melody, wide expressive pitch contour, sustained musical phrasing" },
+    ];
+    // Style descriptors, not note-for-note transcriptions: these steer the
+    // model's own melody toward the character of a well-known bhakti/aarti
+    // tune (tonality, tempo, register, phrasing) rather than claiming to
+    // reproduce its exact notes, which vary by performer, region, and key.
+    const MELODY_PRESETS = [
+      { id: 'none', label: 'None — let the model invent', text: '' },
+      { id: 'om-jai-jagdish', label: 'Om Jai Jagdish Hare (universal aarti)',
+        text: "melody in the character of the classic Om Jai Jagdish Hare aarti, bright major tonality, simple stepwise rising-and-falling phrase, warm congregational singalong feel, medium tempo, phrase repeats with a call-and-response lift on the repeat" },
+      { id: 'jai-ganesh', label: 'Jai Ganesh Deva (Ganesh aarti)',
+        text: "melody in the character of the Jai Ganesh Deva aarti, bouncy playful major tonality, skipping dotted rhythm, bright and festive, simple repeating phrase suited to clapping along, upbeat tempo" },
+      { id: 'om-jai-shiv', label: 'Om Jai Shiv Omkara (Shiv aarti)',
+        text: "melody in the character of the Om Jai Shiv Omkara aarti, same aarti-family phrase shape as Om Jai Jagdish Hare but sat lower and more solemn, unhurried tempo, meditative weight, gentle rise into the repeated refrain" },
+      { id: 'sukhkarta', label: 'Sukhkarta Dukhharta (Marathi Ganpati aarti)',
+        text: "melody in the character of the Marathi Ganpati aarti Sukhkarta Dukhharta, syncopated festive rhythm, joyful lilting phrase, medium-fast tempo, communal celebratory energy" },
+      { id: 'raghupati', label: 'Raghupati Raghava (Ram bhajan)',
+        text: "melody in the character of the Raghupati Raghava Raja Ram bhajan, extremely simple two-phrase melody, slow-to-medium meditative tempo, minimal repetitive contour, calm and steady, built for group chanting" },
+      { id: 'achyutam', label: 'Achyutam Keshavam (Krishna bhajan)',
+        text: "melody in the character of the Achyutam Keshavam bhajan, light skipping upbeat phrase, bright major tonality, playful call-and-response singalong feel, brisk tempo",
+        // Hand-transcribed from a user-supplied reference (not model memory) and
+        // confirmed with real local test generations on 2026-09-25 — see
+        // requests/achyutam-keshavam.json and achyutam-keshavam-2x.json. The
+        // abc/lyrics below are the exact verified pair; they only make sense
+        // together (the notes are aligned syllable-by-syllable to this lyric
+        // text). Note values are doubled vs. the first draft: the model sang
+        // the 1x version in ~11.4s regardless of the requested duration/tempo
+        // (it ends itself once the score is "sung", ignoring Q: as a real
+        // constraint) — doubling every duration doubled the actual sung time
+        // to ~23s, confirming the model scales pace off note-length numbers,
+        // not the tempo header.
+        abc: `X:1
+T:Achyutam Keshavam (hand-transcribed verse, 2x note lengths)
+M:4/4
+L:1/8
+Q:1/4=100
+V: Vocal clef=treble name="Vocal Melody" snm="Vocal"
+V: Ins clef=treble name="Ins Melody" snm="Inst."
+K:C
+% verse
+V: Vocal
+C2D2E2E4F2E2|D2C2D4D4E2D2|C2B,2A4A4A,2D2|D2D2E2D4B,2C2|C2D2E4E2F2|E4D2C2D4D4E2D2|C2B,2A4A4A,2|D2D2D2E4D2B,2C2|
+V: Ins
+Z14|Z16|Z16|Z14|Z12|Z20|Z14|Z16|
+`,
+        lyrics: `[Verse]
+Achyutam Keshavam Krishna Damodaram
+Rama Narayanam Janaki Vallabham
+Kaun kehta hai Bhagwan aate nahi
+Tum Meera ke jaise bulate nahi`,
+      },
+      { id: 'hare-krishna', label: 'Hare Krishna maha-mantra (kirtan)',
+        text: "melody in the character of a Hare Krishna maha-mantra kirtan, simple ascending-then-descending chant phrase repeated call-and-response, starts slow and builds energy and tempo over repeats, kirtan hand-cymbal pulse" },
+      { id: 'vaishnav-jan', label: 'Vaishnav Jan To (Gandhi’s favorite bhajan)',
+        text: "melody in the character of the Vaishnav Jan To bhajan, gentle flowing contemplative phrase, slow-to-medium tempo, tender and introspective, smooth stepwise movement with soft ornamentation" },
+      { id: 'twameva', label: 'Twameva Mata (Sanskrit shloka)',
+        text: "melody in the character of the Twameva Mata Cha Pita shloka, slow reverent stepwise chant, narrow pitch range, unhurried and devotional, simple repeating cadence" },
+    ];
+    const DEFAULT_VOICE = 'woman-young';
+
+    const voiceGrid = document.querySelector('#voice-grid');
+    for (const v of VOICES) voiceGrid.add(new Option(v.label, v.id, false, v.id === DEFAULT_VOICE));
+    function selectedVoice() { return VOICES.find(v => v.id === voiceGrid.value) || VOICES.find(v => v.id === DEFAULT_VOICE); }
+    const melodyPresetSelect = document.querySelector('#melody-preset');
+    for (const m of MELODY_PRESETS) melodyPresetSelect.insertAdjacentHTML('beforeend', `<option value="${m.id}">${m.label}</option>`);
+    function selectedMelodyPreset() {
+      return MELODY_PRESETS.find(m => m.id === melodyPresetSelect.value) || MELODY_PRESETS[0];
+    }
+    const verifiedScoreRow = document.querySelector('#verified-score-row');
+    const loadVerifiedScoreButton = document.querySelector('#load-verified-score');
+    function updateVerifiedScoreRow() {
+      const preset = selectedMelodyPreset();
+      verifiedScoreRow.classList.toggle('hidden', !preset.abc);
+      if (preset.abc) loadVerifiedScoreButton.textContent = `Load the verified ${preset.label} score`;
+    }
+    loadVerifiedScoreButton.addEventListener('click', () => {
+      const preset = selectedMelodyPreset();
+      if (!preset.abc) return;
+      document.querySelector('#abc-score').value = preset.abc;
+      document.querySelector('#plan-status').textContent = '';
+      updatePreview();
+    });
+    document.querySelector('#load-verified-lyrics-too').addEventListener('click', event => {
+      event.preventDefault();
+      const preset = selectedMelodyPreset();
+      if (!preset.lyrics) return;
+      document.querySelector('#lyrics').value = preset.lyrics;
+      updatePreview();
+    });
+    function composedStyle() {
+      const base = document.querySelector('#style').value.trim();
+      const parts = [
+        base,
+        selectedVoice().text,
+        QUALITIES[document.querySelector('#quality').value],
+        BACKGROUNDS[document.querySelector('#background').value],
+        SINGING[Number(document.querySelector('#singing').value)].text,
+        selectedMelodyPreset().text,
+      ].filter(Boolean);
+      return parts.join(', ');
+    }
+    function updatePreview() {
+      document.querySelector('#lyrics-added').textContent = document.querySelector('#lyrics').value.trim() ? '· Added' : ''; 
+      document.querySelector('#prompt-preview').textContent = composedStyle();
+      const singing = SINGING[Number(document.querySelector('#singing').value)];
+      document.querySelector('#singing-label').textContent = singing.label;
+      document.querySelector('#cfg-scale-value').textContent = Number(document.querySelector('#cfg-scale').value).toFixed(1);
+      document.querySelector('#score-warning').classList.toggle('hidden', singing.cot !== 'off' || !document.querySelector('#abc-score').value.trim());
+      updateVerifiedScoreRow();
+    }
+    voiceGrid.addEventListener('change', updatePreview);
+    document.querySelector('#quality').addEventListener('change', updatePreview);
+    document.querySelector('#background').addEventListener('change', updatePreview);
+    document.querySelector('#singing').addEventListener('input', updatePreview);
+    melodyPresetSelect.addEventListener('change', updatePreview);
+    document.querySelector('#style').addEventListener('input', updatePreview);
+    document.querySelector('#cfg-scale').addEventListener('input', updatePreview);
+    document.querySelector('#abc-score').addEventListener('input', updatePreview);
+    document.querySelector('#lyrics').addEventListener('input', updatePreview);
+    document.querySelector('#generate-form').addEventListener('invalid', event => { for (let el = event.target.parentElement; el; el = el.parentElement) if (el.tagName === 'DETAILS') el.open = true; }, true);
+    updatePreview();
+
+    let refreshTimer;
+    let hasActiveJobs = false;
+    function scheduleRefresh() {
+      clearTimeout(refreshTimer);
+      const delay = document.hidden ? 60000 : hasActiveJobs ? 5000 : 30000;
+      refreshTimer = setTimeout(async () => {
+        if (sessionStorage.getItem(key) && !document.hidden) await refreshJobs();
+        scheduleRefresh();
+      }, delay);
+    }
+    function showApp() { loginPanel.classList.add('hidden'); app.classList.remove('hidden'); refreshJobs().finally(scheduleRefresh); }
+    document.querySelector('#login-form').addEventListener('submit', async event => {
+      event.preventDefault();
+      const password = document.querySelector('#password').value;
+      const result = await fetch('/api/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ password }) }).then(r => r.json());
+      if (!result.ok) { document.querySelector('#login-error').textContent = 'That password did not work.'; return; }
+      sessionStorage.setItem(key, password); document.querySelector('#login-error').textContent = ''; showApp();
+    });
+    document.querySelector('#generate-form').addEventListener('submit', async event => {
+      event.preventDefault();
+      const button = document.querySelector('#generate-button'); button.disabled = true; button.textContent = 'Sending…';
+      document.querySelector('#generate-error').textContent = '';
+      try {
+        const duration = Number(document.querySelector('#duration').value);
+        const singing = SINGING[Number(document.querySelector('#singing').value)];
+        const cfgScale = Number(document.querySelector('#cfg-scale').value);
+        const steps = Math.min(64, Math.max(1, Math.round(Number(document.querySelector('#steps').value)) || 32));
+        const seed = Math.trunc(Number(document.querySelector('#seed').value));
+        const abc = document.querySelector('#abc-score').value.trim();
+        const submitted = await api('/api/jobs', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ request: {
+          style: composedStyle(),
+          lyrics: document.querySelector('#lyrics').value,
+          duration,
+          cot: singing.cot, lm_seed: seed, seed: seed, steps,
+          lm_batch_size: 1, synth_batch_size: 1, cfg_scale: cfgScale, output_format: 'wav16',
+          abc_sampling: { max_tokens: 1024 },
+          semantic_sampling: { min_tokens: Math.min(200, Math.round(duration * 10)), max_tokens: Math.round(duration * 25) },
+          ...(abc ? { abc } : {}),
+        } }) });
+        pendingSelection = (await submitted.json()).id;
+        refreshJobs().finally(scheduleRefresh);
+      } catch (error) { document.querySelector('#generate-error').textContent = error.message; }
+      finally { button.disabled = false; button.textContent = 'Create music'; }
+    });
+    // --- Melody preview (plan jobs) --------------------------------------
+    // "Draft a melody" submits a lightweight plan job: the laptop runs the
+    // symbolic planning stage alone (no VAE, no audio) and returns the ABC
+    // score it would otherwise invent silently during a full take. Editing
+    // that text and attaching it as `abc` on the real job is how the score
+    // becomes controllable instead of a black box.
+    const planButton = document.querySelector('#plan-button');
+    const planStatus = document.querySelector('#plan-status');
+    const scoreField = document.querySelector('#abc-score');
+    async function pollPlanJob(jobId) {
+      const deadline = Date.now() + 120000;
+      while (Date.now() < deadline) {
+        const job = await api(`/api/jobs/${jobId}`).then(r => r.json());
+        if (job.status === 'complete') { scoreField.value = job.resultText || ''; planStatus.textContent = 'Draft ready — edit below, then Create music.'; updatePreview(); return; }
+        if (job.status === 'failed') { planStatus.textContent = `Draft failed: ${job.error || 'unknown error'}`; return; }
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      }
+      planStatus.textContent = 'Still drafting — check back, or try again.';
+    }
+    planButton.addEventListener('click', async () => {
+      planButton.disabled = true;
+      planStatus.textContent = 'Drafting on the laptop…';
+      try {
+        const duration = Number(document.querySelector('#duration').value);
+        const singing = SINGING[Number(document.querySelector('#singing').value)];
+        const { id } = await api('/api/jobs', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ kind: 'plan', request: {
+          style: composedStyle(),
+          lyrics: document.querySelector('#lyrics').value,
+          duration,
+          cot: singing.cot === 'off' ? 'melody' : singing.cot, lm_seed: -1,
+          abc_sampling: { max_tokens: 1024 },
+        } }) });
+        await pollPlanJob(id);
+      } catch (error) { planStatus.textContent = error.message; }
+      finally { planButton.disabled = false; }
+    });
+    document.querySelector('#clear-score-button').addEventListener('click', () => { scoreField.value = ''; planStatus.textContent = ''; updatePreview(); });
+
+    const audioUrls = new Map();
+    let selectedId = null, pendingSelection = null, jobsSnapshot = '', selectionVersion = 0;
+    const statusLabels = { queued: 'Waiting to begin', running: 'Creating your music…', complete: 'Ready', failed: 'Could not create' };
+    const trackTitle = job => { const first = (job.request.style || 'Untitled creation').split(/[,\n]/)[0].trim(); return first.length > 54 ? first.slice(0, 51) + '…' : first; };
+    function node(tag, text, className) { const el = document.createElement(tag); el.textContent = text; if (className) el.className = className; return el; }
+    async function selectTrack(job) {
+      const version = ++selectionVersion;
+      selectedId = job.id;
+      document.querySelectorAll('audio').forEach(audio => audio.pause());
+      const target = document.querySelector('#creation');
+      target.replaceChildren(node('h3', trackTitle(job)), node('p', 'Loading audio…', 'muted'));
+      try {
+        if (!audioUrls.has(job.id)) {
+          const source = await api(`/api/jobs/${job.id}/audio`);
+          audioUrls.set(job.id, URL.createObjectURL(await source.blob()));
+        }
+        if (version !== selectionVersion) return;
+        const audio = document.createElement('audio'); audio.controls = true; audio.preload = 'metadata'; audio.src = audioUrls.get(job.id); audio.setAttribute('aria-label', trackTitle(job));
+        const meta = node('p', `Requested: ${job.request.duration} sec`, 'muted');
+        audio.addEventListener('loadedmetadata', () => { if (Number.isFinite(audio.duration)) meta.textContent = `Length: ${Math.round(audio.duration)} sec`; });
+        audio.addEventListener('error', () => { meta.textContent = 'Audio could not load. Select the track again to retry.'; URL.revokeObjectURL(audioUrls.get(job.id)); audioUrls.delete(job.id); });
+        const download = node('a', 'Download audio', 'download'); download.href = audio.src; download.download = job.audioName || 'raagspace.wav';
+        target.replaceChildren(node('h3', trackTitle(job)), meta, audio, download);
+      } catch (error) {
+        if (version !== selectionVersion) return;
+        const retry = node('button', 'Retry audio'); retry.type = 'button'; retry.onclick = () => selectTrack(job);
+        target.replaceChildren(node('h3', trackTitle(job)), node('p', error.message, 'error'), retry);
+      }
+    }
+    async function refreshJobs() {
+      try {
+        const { jobs: allJobs } = await api('/api/jobs').then(r => r.json());
+        const jobs = allJobs.filter(job => job.kind !== 'plan');
+        hasActiveJobs = jobs.some(job => job.status === 'queued' || job.status === 'running');
+        document.querySelector('#connection-status').textContent = hasActiveJobs ? jobs.filter(job => job.status === 'queued' || job.status === 'running').map(job => statusLabels[job.status]).join(' · ') + '. Keep your music computer connected.' : '';
+        const snapshot = JSON.stringify(jobs);
+        if (snapshot === jobsSnapshot) return;
+        jobsSnapshot = snapshot;
+        const container = document.querySelector('#jobs');
+        container.replaceChildren();
+        if (!jobs.length) container.append(node('p', 'No tracks yet. Your first creation starts above.', 'muted'));
+        for (const job of jobs) {
+          const card = node('article', '', 'job');
+          const top = node('div', '', 'jobtop');
+          top.append(node('h3', trackTitle(job)), node('span', statusLabels[job.status] || job.status, `pill ${job.status}`)); card.append(top);
+          card.append(node('p', `${new Date(job.createdAt).toLocaleString()} · Requested: ${job.request.duration || '?'} sec`, 'muted'));
+          const details = document.createElement('details'); details.append(node('summary', 'Details'), node('p', job.request.style, 'full-prompt'), node('p', job.request.lyrics || '', 'full-prompt')); card.append(details);
+          if (job.status === 'complete') {
+            const listen = node('button', 'Listen', 'listen'); listen.type = 'button'; listen.onclick = () => { selectTrack(job); document.querySelector('#creation-heading').scrollIntoView({block:'nearest'}); }; card.append(listen);
+          }
+          if (job.error) card.append(node('p', job.error, 'error'));
+          container.append(card);
+        }
+        const completedSelection = jobs.find(job => job.id === pendingSelection && job.status === 'complete');
+        if (completedSelection) { pendingSelection = null; selectTrack(completedSelection); }
+        if (!selectedId) { const latest = jobs.find(job => job.status === 'complete'); if (latest) selectTrack(latest); }
+      } catch (error) { document.querySelector('#connection-status').textContent = `Could not refresh your music. ${error.message}`; }
+    }
+    if (sessionStorage.getItem(key)) {
+      api('/api/jobs').then(() => showApp()).catch(() => showLogin());
+    }
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) scheduleRefresh();
+      else if (sessionStorage.getItem(key)) refreshJobs().finally(scheduleRefresh);
+    });
+  </script>
+</body>
+</html>

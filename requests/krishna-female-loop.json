@@ -1,0 +1,23 @@
+{
+  "style": "Unaccompanied Sanskrit devotional mantra, a cappella, one young adult female singer, youthful feminine soprano, sweet clear human voice, delicate bell-like tone, gentle and calming devotional expression, lightly intoned speech, natural syllabic pronunciation, voice starts immediately with Om, continuous flowing recitation, narrow melodic range, dry close vocal, two complete mantra repetitions, complete final Namah followed by a short natural breath, no instruments, no drone, no percussion, no backing vocals, no humming introduction, no extended opening vowel, no instrumental intro or outro, no long reverb tail",
+  "lyrics": "[Chorus]\nOm Krishnaaya Vaasudevaaya\nHaraye Paramaatmane\nPranatah Klesha Naashaaya\nGovindaaya Namo Namah\n\n[Chorus]\nOm Krishnaaya Vaasudevaaya\nHaraye Paramaatmane\nPranatah Klesha Naashaaya\nGovindaaya Namo Namah",
+  "cot": "off",
+  "duration": 35.0,
+  "lm_seed": 45,
+  "seed": 45,
+  "steps": 32,
+  "lm_batch_size": 1,
+  "synth_batch_size": 1,
+  "cfg_scale": 1.2,
+  "output_format": "wav16",
+  "abc_sampling": {
+    "max_tokens": 1024
+  },
+  "semantic_sampling": {
+    "min_tokens": 750,
+    "max_tokens": 875
+  },
+  "_music_space": {
+    "prepare_loop": true
+  }
+}

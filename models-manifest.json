@@ -1,0 +1,10 @@
+{
+  "YuE2-3B-Q5_K_M.gguf": {
+    "bytes": 2622936832,
+    "sha256": "cd3efd250b734a229172800f08f33a893ad1f66b521666e176cdae4a0729b281"
+  },
+  "YuE2-Vae-F32.gguf": {
+    "bytes": 530497344,
+    "sha256": "93e49dfb1970e89ad64cacb17cf13b5d05f6bb30ef7ed3adae3050bcb728638a"
+  }
+}

@@ -1,0 +1,2 @@
+ALTER TABLE jobs ADD COLUMN kind TEXT NOT NULL DEFAULT 'generate';
+ALTER TABLE jobs ADD COLUMN result_text TEXT;

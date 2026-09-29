@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 500">
+<defs><radialGradient id="leaf"><stop stop-color="#789778"/><stop offset="1" stop-color="#315F4D"/></radialGradient><linearGradient id="petal" x2="0" y2="1"><stop stop-color="#D88776"/><stop offset="1" stop-color="#F3D9AA"/></linearGradient></defs>
+<g fill="none" stroke="#688570" stroke-width="3"><path d="M4 500Q170 330 72 120"/><path d="M0 500Q100 400 205 291"/><path d="M0 500Q215 452 280 415"/><path d="M48 500Q14 312 24 222"/></g>
+<g fill="url(#leaf)" stroke="#789778" stroke-width="1.5"><path d="M4 242C-42 199-1 124 49 138c56-29 100 30 82 64 8 36-42 68-81 38L33 205Z"/><path d="M-11 378c-31-41-10-99 31-93 41-51 104-14 104 27 30 50-11 93-53 62L29 333Z"/><path d="M51 490c-17-62 18-95 57-81 20-41 79-24 83 6 35 6 46 55 12 82L129 463Z"/><path d="M192 492c-26-44 10-84 42-66 36-28 83 4 69 32 32 24 16 64-27 60L251 481Z"/></g>
+<g fill="none" stroke="#BCD0A5" stroke-width="1" opacity=".75"><path d="M33 205L12 157M33 205L69 151M33 205L113 184M33 205L89 238M29 333L14 300M29 333L81 297M29 333L108 339M29 333L57 366M129 463L103 422M129 463L165 421M129 463L192 472M251 481L230 440M251 481L286 454"/></g>
+<g fill="url(#petal)" stroke="#C87769" stroke-width="1"><path d="M203 308Q174 285 179 250Q209 263 214 293Z"/><path d="M211 310Q186 275 208 226Q235 268 219 305Z"/><path d="M214 310Q218 270 250 258Q247 296 214 310Z"/><path d="M211 312Q175 315 163 285Q195 282 211 312Z"/><path d="M211 312Q238 282 263 286Q247 318 211 312Z"/></g>
+<g fill="#8DA78B"><path d="M72 147Q40 116 55 80Q86 105 72 147Z"/><path d="M76 128Q77 86 112 72Q112 110 76 128Z"/></g>
+</svg>

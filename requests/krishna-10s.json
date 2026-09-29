@@ -1,0 +1,15 @@
+{
+  "style": "Indian devotional, Sanskrit mantra, peaceful, gentle solo vocal, tanpura drone, soft bansuri flute, meditative, intimate, vocals from the beginning",
+  "lyrics": "[Verse]\nॐ कृष्णाय वासुदेवाय हरये परमात्मने।",
+  "cot": "melody",
+  "duration": 10.0,
+  "lm_seed": 42,
+  "seed": 42,
+  "steps": 32,
+  "lm_batch_size": 1,
+  "synth_batch_size": 1,
+  "cfg_scale": 1.0,
+  "output_format": "wav16",
+  "abc_sampling": {"max_tokens": 1024},
+  "semantic_sampling": {"min_tokens": 250, "max_tokens": 250}
+}

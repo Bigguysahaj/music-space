@@ -1,0 +1,21 @@
+{
+  "style": "Indian devotional, Sanskrit mantra chanting, clear expressive solo vocal, voice-led, immediate vocal entrance, no instrumental intro, sparse tanpura drone, peaceful, meditative",
+  "lyrics": "[Verse]\nॐ कृष्णाय वासुदेवाय हरये परमात्मने।\nप्रणतः क्लेशनाशाय गोविंदाय नमो नमः॥",
+  "cot": "melody",
+  "duration": 40.0,
+  "lm_seed": 42,
+  "seed": 42,
+  "steps": 32,
+  "lm_batch_size": 1,
+  "synth_batch_size": 1,
+  "cfg_scale": 1.0,
+  "output_format": "wav16",
+  "abc_sampling": {
+    "max_tokens": 1024
+  },
+  "semantic_sampling": {
+    "min_tokens": 1000,
+    "max_tokens": 1000
+  },
+  "abc": "X:1\nT:\nM:4/4\nL:1/16\nQ:1/4=84\nV: Vocal clef=treble name=\"Vocal Melody\" snm=\"Vocal\"\nV: Ins clef=treble name=\"Ins Melody\" snm=\"Inst.\"\nK:Eb\n% verse\nV: Vocal\nE8z4F4|G6B2G2F2G2B2|c4c4z4e2c2|c8z8|\nV: Ins\nZ4|\nV: Vocal\nB2c2e4c4B4|G8F4z4|E8z8|Z|\nV: Ins\nZ2|z12G2F2|G6B2G2F2E4|\nV: Vocal\nE8z4F4|G6B2G2F2G2B2|c4c4z4e2c2|c8z8|\nV: Ins\nZ4|\nV: Vocal\nB2c2e4c4B4|G8F4z4|E8z8|Z|\nV: Ins\nZ3|z4E2F2G2B2c2e2|\n"
+}

@@ -1,0 +1,16 @@
+{
+  "style": "Devotional Krishna bhajan, joyful congregational singing, warm clear man's voice, light harmonium and tabla, bright and uplifting, brisk skipping tempo, community singalong feel",
+  "lyrics": "[Verse]\nOm Krishnaaya Vaasudevaaya\nHaraye Paramaatmane\nPranatah Klesha Naashaaya\nGovindaaya Namo Namah",
+  "cot": "melody",
+  "duration": 25.0,
+  "lm_seed": 46,
+  "seed": 46,
+  "steps": 32,
+  "lm_batch_size": 1,
+  "synth_batch_size": 1,
+  "cfg_scale": 1.0,
+  "output_format": "wav16",
+  "abc_sampling": { "max_tokens": 1024 },
+  "semantic_sampling": { "min_tokens": 400, "max_tokens": 650 },
+  "abc": "X:1\nT:Achyutam Keshavam mukhda, re-barred for the Krishna mantra (hand-adapted draft, unverified)\nM:4/4\nL:1/8\nQ:1/4=93\nK:C\nV: Vocal clef=treble name=\"Vocal Melody\" snm=\"Vocal\"\nV: Ins clef=treble name=\"Ins Melody\" snm=\"Inst.\"\n% verse - contour follows the original mukhda's rise-peak-fall / meander / descend-leap / meander-resolve shape, re-noted to fit this mantra's longer syllable counts per line (9/8/8/8 vs the original's 6/6/6/6)\nV: Vocal\nC2D2E2E2F4E2D2C2D2|D2C2D2D2D4E2D2|C2B,2A2A4A,2D2D2C2|D2D2E2D4B,2C2D2C2|\nV: Ins\nZ20|Z16|Z18|Z18|\n"
+}

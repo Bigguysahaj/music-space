@@ -1,0 +1,16 @@
+{
+  "style": "Devotional Krishna bhajan, joyful congregational singing, warm clear woman's voice, light harmonium and tabla, bright and uplifting, brisk skipping tempo, community singalong feel",
+  "lyrics": "[Verse]\nAchyutam Keshavam Krishna Damodaram\nRama Narayanam Janaki Vallabham\nKaun kehta hai Bhagwan aate nahi\nTum Meera ke jaise bulate nahi",
+  "cot": "melody",
+  "duration": 30.0,
+  "lm_seed": 42,
+  "seed": 42,
+  "steps": 32,
+  "lm_batch_size": 1,
+  "synth_batch_size": 1,
+  "cfg_scale": 1.0,
+  "output_format": "wav16",
+  "abc_sampling": { "max_tokens": 1024 },
+  "semantic_sampling": { "min_tokens": 400, "max_tokens": 750 },
+  "abc": "X:1\nT:Achyutam Keshavam (hand-transcribed verse, 2x note lengths)\nM:4/4\nL:1/8\nQ:1/4=100\nV: Vocal clef=treble name=\"Vocal Melody\" snm=\"Vocal\"\nV: Ins clef=treble name=\"Ins Melody\" snm=\"Inst.\"\nK:C\n% verse\nV: Vocal\nC2D2E2E4F2E2|D2C2D4D4E2D2|C2B,2A4A4A,2D2|D2D2E2D4B,2C2|C2D2E4E2F2|E4D2C2D4D4E2D2|C2B,2A4A4A,2|D2D2D2E4D2B,2C2|\nV: Ins\nZ14|Z16|Z16|Z14|Z12|Z20|Z14|Z16|\n"
+}
