@@ -25,6 +25,8 @@ function requireBridge(request, env) {
   return Boolean(env.BRIDGE_TOKEN) && constantTimeEqual(bearer(request), env.BRIDGE_TOKEN);
 }
 
+const MAX_AUDIO_BYTES = 25 * 1024 * 1024;
+
 function safeJob(row) {
   return {
     id: row.id,
@@ -69,14 +71,27 @@ async function route(request, env) {
       return json({ job: { id: row.id, kind: row.kind, request: JSON.parse(row.request_json) } });
     }
 
+    // Transcribe jobs carry reference audio uploaded by the phone. The bridge
+    // fetches it through this bridge-authed proxy rather than a field in the
+    // claim response, so claim stays JSON-only.
+    const sourceMatch = path.match(/^\/api\/bridge\/jobs\/([0-9a-f-]+)\/source$/i);
+    if (sourceMatch && method === "GET") {
+      const row = await env.DB.prepare("SELECT status, kind, source_audio_key FROM jobs WHERE id = ?").bind(sourceMatch[1]).first();
+      if (!row || row.status !== "running") return json({ error: "Job is not running" }, 409);
+      if (row.kind !== "transcribe" || !row.source_audio_key) return json({ error: "This job has no source audio" }, 400);
+      const audio = await env.AUDIO.get(row.source_audio_key, "stream");
+      if (!audio) return json({ error: "Source audio is still being distributed; try again shortly" }, 404);
+      return new Response(audio, { headers: { "content-type": "audio/wav", "cache-control": "no-store" } });
+    }
+
     const resultMatch = path.match(/^\/api\/bridge\/jobs\/([0-9a-f-]+)\/result$/i);
     if (resultMatch && method === "PUT") {
       const id = resultMatch[1];
       const row = await env.DB.prepare("SELECT status, kind FROM jobs WHERE id = ?").bind(id).first();
       if (!row || row.status !== "running") return json({ error: "Job is not running" }, 409);
-      if (row.kind === "plan") return json({ error: "This job expects a score, not audio" }, 400);
+      if (row.kind === "plan" || row.kind === "transcribe") return json({ error: "This job expects a score, not audio" }, 400);
       const bytes = await request.arrayBuffer();
-      if (!bytes.byteLength || bytes.byteLength > 25 * 1024 * 1024) return json({ error: "Audio must be between 1 byte and 25 MiB" }, 413);
+      if (!bytes.byteLength || bytes.byteLength > MAX_AUDIO_BYTES) return json({ error: "Audio must be between 1 byte and 25 MiB" }, 413);
       const name = (request.headers.get("x-audio-name") || "generated.wav").replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 120);
       const key = `jobs/${id}/${name}`;
       await env.AUDIO.put(key, bytes);
@@ -91,7 +106,7 @@ async function route(request, env) {
       const id = scoreMatch[1];
       const row = await env.DB.prepare("SELECT status, kind FROM jobs WHERE id = ?").bind(id).first();
       if (!row || row.status !== "running") return json({ error: "Job is not running" }, 409);
-      if (row.kind !== "plan") return json({ error: "This job expects audio, not a score" }, 400);
+      if (row.kind !== "plan" && row.kind !== "transcribe") return json({ error: "This job expects audio, not a score" }, 400);
       const text = await request.text();
       if (!text.trim() || text.length > 200000) return json({ error: "Score must be non-empty and under 200,000 characters" }, 413);
       await env.DB.prepare(
@@ -114,6 +129,32 @@ async function route(request, env) {
   }
 
   if (!requireUser(request, env)) return json({ error: "Unauthorized" }, 401);
+
+  // Transcribe jobs are created in one multipart request (a JSON "meta" part
+  // plus an "audio" part) rather than POST + a separate audio PUT, so a job
+  // never exists in the queue without its source audio.
+  if (path === "/api/jobs" && method === "POST" && (request.headers.get("content-type") || "").startsWith("multipart/form-data")) {
+    const form = await request.formData().catch(() => null);
+    if (!form) return json({ error: "Could not read the upload" }, 400);
+    let meta;
+    try { meta = JSON.parse(form.get("meta") || "{}"); } catch { return json({ error: "meta must be JSON" }, 400); }
+    if (meta?.kind !== "transcribe") return json({ error: "Only transcribe jobs accept an audio upload" }, 400);
+    const options = meta.request ?? {};
+    if (typeof options !== "object" || Array.isArray(options)) return json({ error: "Provide a request object" }, 400);
+    if (options.melody_only !== undefined && typeof options.melody_only !== "boolean") return json({ error: "melody_only must be true or false" }, 400);
+    const audio = form.get("audio");
+    if (!audio || typeof audio === "string") return json({ error: "Attach an audio file" }, 400);
+    const bytes = await audio.arrayBuffer();
+    if (!bytes.byteLength || bytes.byteLength > MAX_AUDIO_BYTES) return json({ error: "Audio must be between 1 byte and 25 MiB" }, 413);
+    const id = crypto.randomUUID();
+    const now = new Date().toISOString();
+    const key = `jobs/${id}/source.wav`;
+    await env.AUDIO.put(key, bytes);
+    await env.DB.prepare(
+      "INSERT INTO jobs (id, kind, status, created_at, updated_at, request_json, source_audio_key) VALUES (?, 'transcribe', 'queued', ?, ?, ?, ?)",
+    ).bind(id, now, now, JSON.stringify({ melody_only: options.melody_only ?? true }), key).run();
+    return json({ id, status: "queued" }, 201);
+  }
 
   if (path === "/api/jobs" && method === "POST") {
     const body = await request.json().catch(() => null);

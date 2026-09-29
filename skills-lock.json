@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "skills": {
+    "bro": {
+      "source": "backnotprop/bro",
+      "sourceType": "github",
+      "skillPath": "skills/bro/SKILL.md",
+      "computedHash": "7a32a6afcc9fd6afca39febc769b6dd789bdce407a6f4ab521d1261b21dee29e"
+    },
+    "clean-room": {
+      "source": "backnotprop/bro",
+      "sourceType": "github",
+      "skillPath": "skills/clean-room/SKILL.md",
+      "computedHash": "f9bf727affb6da25803c6179daad810caec6e9852506a298230cb1cef958e6f9"
+    },
+    "facts": {
+      "source": "backnotprop/bro",
+      "sourceType": "github",
+      "skillPath": "skills/facts/SKILL.md",
+      "computedHash": "e8f42a754f6994bcce0ef6796f0731b1c42c681ade9f5e2e1b706b5887c611ec"
+    },
+    "ladder": {
+      "source": "backnotprop/bro",
+      "sourceType": "github",
+      "skillPath": "skills/ladder/SKILL.md",
+      "computedHash": "59a076e3abb769b5e2c15b2daa58fa17a81dfaf72b763744257e7fac5ceaf6b2"
+    },
+    "readback": {
+      "source": "backnotprop/bro",
+      "sourceType": "github",
+      "skillPath": "skills/readback/SKILL.md",
+      "computedHash": "cac6658949eff199503d44825832893664971ccac3b33f9c47e071c00d3a6ee2"
+    },
+    "recap": {
+      "source": "backnotprop/bro",
+      "sourceType": "github",
+      "skillPath": "skills/recap/SKILL.md",
+      "computedHash": "db1a4f49e70030cb96ba2b2ddaf25b30144c7a6628a585ee1f22b5817346565d"
+    },
+    "status": {
+      "source": "backnotprop/bro",
+      "sourceType": "github",
+      "skillPath": "skills/status/SKILL.md",
+      "computedHash": "19fdef0b43a1b6c210c77a9e6c344ed0bd95f4e4ddabdf7a9d207623048b6104"
+    }
+  }
+}

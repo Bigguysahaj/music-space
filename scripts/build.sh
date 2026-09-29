@@ -10,4 +10,4 @@ cmake -S "$MUSIC_SPACE_ROOT/vendor/yue2.cpp" -B "$MUSIC_SPACE_ROOT/vendor/yue2.c
   -DCMAKE_EXE_LINKER_FLAGS="-L$CUDA_HOME/lib -Wl,-rpath,$CUDA_HOME/lib" \
   -DCMAKE_SHARED_LINKER_FLAGS="-L$CUDA_HOME/lib -Wl,-rpath,$CUDA_HOME/lib" \
   -DGGML_CUDA_FA_ALL_QUANTS=OFF
-cmake --build "$MUSIC_SPACE_ROOT/vendor/yue2.cpp/build" --target yue-synth yue-server yue-plan -j 8
+cmake --build "$MUSIC_SPACE_ROOT/vendor/yue2.cpp/build" --target yue-synth yue-server yue-plan yue-transcribe -j 8

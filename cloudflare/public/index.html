@@ -68,6 +68,14 @@ Govindaaya Namo Namah</textarea>
             <button type="button" id="plan-button">Draft a melody</button>
             <span class="muted" id="plan-status"></span>
           </p>
+          <label for="reference-audio">Or transcribe a real recording</label>
+          <p class="hint">Upload the song you want the melody of, or hum/sing it into the mic. The laptop listens and writes the notes it hears into the score below — the actual tune, not a guess.</p>
+          <input id="reference-audio" type="file" accept="audio/*">
+          <p class="row" style="align-items:center">
+            <button type="button" id="record-button" class="muted" style="background:transparent;border:1px solid #a9e8bb;color:#aff3c6">Record with mic</button>
+            <button type="button" id="transcribe-button" disabled>Transcribe melody</button>
+            <span class="muted" id="transcribe-status"></span>
+          </p>
           <label for="abc-score">Score (ABC notation)</label>
           <textarea id="abc-score" placeholder="Empty = let the model invent the melody while it sings." style="min-height:110px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px"></textarea>
           <p class="hint">
@@ -77,7 +85,7 @@ Govindaaya Namo Namah</textarea>
             <code>Z</code> rests under <code>V: Vocal</code> to make the voice come in sooner.
           </p>
           <p><button type="button" id="clear-score-button" class="muted" style="background:transparent;border:1px solid #40564a;color:#c4d3c9">Clear (let the model plan it)</button></p>
-          <p class="error hidden" id="score-warning">Singing style is set to "Rhythmic / spoken", which skips the score entirely — this text will be ignored. Move the slider to Balanced or Melodic to use it.</p>
+          <div id="melody-check" aria-live="polite"></div>
         </details>
 
         <details class="adv">
@@ -105,13 +113,14 @@ Govindaaya Namo Namah</textarea>
           <label>Full prompt sent to the model</label>
           <div id="prompt-preview"></div>
         </details>
-        </details><button id="generate-button" type="submit">Create music</button><p class="error" id="generate-error" role="alert"></p>
+        </details><button type="button" id="check-summary" class="check-summary hidden"></button><button id="generate-button" type="submit">Create music</button><p class="error" id="generate-error" role="alert"></p>
       </form>
       <p class="notice">Keep your music computer connected and its bridge running to create a track. Your finished audio is saved in your private library.</p>
     </section>
     <aside class="listener panel" aria-labelledby="creation-heading"><h2 id="creation-heading">Your creation</h2><div class="cover" aria-hidden="true"><img src="/assets/botanical-corner.svg" alt=""></div><div id="creation"><h3>Your music will appear here</h3><p class="muted">A little space for your next sound.</p></div></aside></div>
     <section class="panel library" id="library"><h2>Your music</h2><p id="connection-status" class="muted" role="status"></p><div id="jobs"><p class="muted">Loading…</p></div></section>
   </main>
+  <script src="/assets/melody-check.js"></script>
   <script>
     const key = 'music-space-password';
     const loginPanel = document.querySelector('#login-panel');
@@ -276,9 +285,167 @@ Tum Meera ke jaise bulate nahi`,
       const singing = SINGING[Number(document.querySelector('#singing').value)];
       document.querySelector('#singing-label').textContent = singing.label;
       document.querySelector('#cfg-scale-value').textContent = Number(document.querySelector('#cfg-scale').value).toFixed(1);
-      document.querySelector('#score-warning').classList.toggle('hidden', singing.cot !== 'off' || !document.querySelector('#abc-score').value.trim());
       updateVerifiedScoreRow();
+      scheduleMelodyCheck();
     }
+    document.querySelector('#duration').addEventListener('input', () => scheduleMelodyCheck());
+
+    // --- Melody check ----------------------------------------------------
+    // Warns, never blocks: explains how the score, the lyrics and Length
+    // will interact before a take is spent on them (assets/melody-check.js
+    // does the counting). Each card: what will happen, a small animated
+    // picture of it, what to do, and a folded "why" for the curious.
+    let melodyCheckTimer = null, melodyCheckSignature = '';
+    function scheduleMelodyCheck() { clearTimeout(melodyCheckTimer); melodyCheckTimer = setTimeout(renderMelodyCheck, 300); }
+    const secondsText = value => `${Math.round(value)} s`;
+    function el(tag, className, text) { const node = document.createElement(tag); if (className) node.className = className; if (text !== undefined) node.textContent = text; return node; }
+    function syllableFlow(syllables, notes) {
+      const flat = syllables.flat(), shown = Math.min(60, Math.max(flat.length, notes));
+      const box = el('div', 'flow'); box.setAttribute('aria-hidden', 'true');
+      for (let i = 0; i < shown; i++) {
+        const syllable = flat[i];
+        const chip = el('span', syllable === undefined ? 'chip hum' : i < notes ? 'chip' : 'chip spill', syllable === undefined ? '~' : syllable);
+        chip.style.setProperty('--i', i);
+        box.append(chip);
+      }
+      if (Math.max(flat.length, notes) > shown) box.append(el('span', 'chip more', '…'));
+      const legend = el('p', 'flow-legend');
+      legend.append(el('span', 'key landed', 'syllable on a note'), el('span', 'key spilled', 'no note left'));
+      if (notes > flat.length) legend.append(el('span', 'key hummed', 'note with no new syllable'));
+      return [box, legend];
+    }
+    function timeline({ onset = 0, sungEnd, duration }) {
+      const total = Math.max(sungEnd, duration) * 1.06, pct = value => `${(100 * value / total).toFixed(2)}%`;
+      const bar = el('div', 'timeline'); bar.setAttribute('aria-hidden', 'true');
+      if (onset > 0.2) { const rest = el('span', 'tl-rest'); rest.style.left = '0'; rest.style.width = pct(onset); bar.append(rest); }
+      const sung = el('span', 'tl-sung'); sung.style.left = pct(onset); sung.style.width = pct(sungEnd - onset); bar.append(sung);
+      if (duration < sungEnd) { const lost = el('span', 'tl-lost'); lost.style.left = pct(duration); lost.style.width = pct(sungEnd - duration); bar.append(lost); }
+      const cut = el('span', 'tl-cut'); cut.style.left = pct(duration); bar.append(cut);
+      const head = el('span', 'tl-head'); head.style.setProperty('--stop', pct(Math.min(duration, total))); bar.append(head);
+      const labels = el('div', 'tl-labels'); labels.setAttribute('aria-hidden', 'true');
+      // One row per label so they never overlap; labels near an edge hug it.
+      const label = (text, at, className) => {
+        const node = el('span', className, text), share = at / total;
+        node.style.top = `${labels.childElementCount * 15}px`;
+        if (share < 0.15) node.style.left = '0';
+        else if (share > 0.8) node.style.right = `${(100 * (1 - share)).toFixed(2)}%`;
+        else { node.style.left = pct(at); node.style.transform = 'translateX(-50%)'; }
+        labels.append(node);
+        labels.style.height = `${labels.childElementCount * 15 + 4}px`;
+      };
+      if (onset > 0.2) label(`voice at ${secondsText(onset)}`, onset, 'tl-l');
+      label(`${duration < sungEnd ? '✂ ' : ''}Length ${secondsText(duration)}`, duration, 'tl-l tl-l-cut');
+      label(`last note ${secondsText(sungEnd)}`, sungEnd, 'tl-l tl-l-end');
+      return [bar, labels];
+    }
+    const CHECK_TEXT = {
+      'short-score': issue => ({
+        title: 'Not enough notes for your words',
+        effect: `${issue.notes} notes, about ${issue.syllables} syllables — so about ${issue.syllables - issue.notes} syllables have no note to land on. Expect words squeezed together, slurred or skipped.`,
+        todo: ['Transcribe or record the whole tune — every line of your lyrics, not a fragment.', `Or trim the lyrics to about ${issue.notes} syllables.`, 'Or clear the score and let the model write a melody that fits.'],
+        why: 'The score holds notes only, not words. The singer decides which syllable goes on which note — and it can’t sing notes that aren’t written.',
+      }),
+      melisma: issue => ({
+        title: 'More notes than syllables',
+        effect: `${issue.notes} notes for about ${issue.syllables} syllables — some syllables will stretch across several notes, like a sung “aaa” run.`,
+        todo: ['Fine for a flowing bhajan.', 'For crisper words, add lyrics or use a shorter stretch of the tune.'],
+        why: 'Holding one vowel over several notes is called melisma. Singers do it all the time, and the model does too when the notes outnumber the words.',
+      }),
+      'cut-off': issue => ({
+        title: 'The song will be cut off',
+        effect: `The score sings until about ${secondsText(issue.scoreSeconds)}, but Length is ${secondsText(issue.duration)}. The engine stops at exactly ${secondsText(issue.duration)} — mid-word if it has to.`,
+        todo: [`Set Length to about ${secondsText(issue.recommended)} (the last note plus a short tail).`],
+        fix: { label: `Set Length to ${secondsText(issue.recommended)}`, done: `Length set to ${secondsText(issue.recommended)}` },
+        why: 'Length is a hard stop, not a target: the engine makes 25 sound frames per second and stops at Length × 25. It doesn’t look ahead to where the score ends.',
+      }),
+      overhang: issue => ({
+        title: 'Length runs well past the score',
+        effect: `The written melody ends around ${secondsText(issue.scoreSeconds)}. For the last ~${secondsText(issue.duration - issue.scoreSeconds)} the model is on its own — expect improvising, repeats or silence.`,
+        todo: [`Set Length to about ${secondsText(issue.recommended)} to end with the score, or keep it if you want the model to carry on.`],
+        fix: { label: `Set Length to ${secondsText(issue.recommended)}`, done: `Length set to ${secondsText(issue.recommended)}` },
+        why: 'After the last written note the model keeps generating until it decides the song is over or Length runs out.',
+      }),
+      'late-start': issue => ({
+        title: 'The voice comes in late',
+        effect: `The first sung note is at about ${secondsText(issue.onsetSeconds)} — probably the recording’s intro, turned into rests. That time goes to silence or backing, not words.`,
+        todo: issue.fix ? ['Trim the intro so the voice starts right away.'] : ['Delete the leading rests (z / Z) under V: Vocal to bring the voice in sooner.'],
+        fix: issue.fix ? { label: 'Trim the intro', done: 'Intro trimmed' } : null,
+        why: 'A transcription writes down everything it hears, including the instrumental intro before the singer starts.',
+      }),
+      ignored: () => ({
+        title: 'This score will be ignored',
+        effect: 'Rhythmic / spoken mode skips the score entirely.',
+        todo: ['Switch to Balanced to use the score.'],
+        fix: { label: 'Switch to Balanced', done: 'Switched to Balanced' },
+        why: 'Rhythmic mode turns off the model’s melody stage (cot = off), so there is nowhere for a score to go.',
+      }),
+      'tune-in-ins': issue => ({
+        title: 'The tune landed in the instrument part',
+        effect: `The transcriber found ${issue.notes} notes but filed them under V: Ins (instrument), not V: Vocal — so the singer has nothing to follow.`,
+        todo: ['Move the tune into the vocal part. Bar counts stay the same, so timing is unchanged.'],
+        fix: { label: 'Use the instrument melody as the vocal', done: 'Melody moved to the vocal part' },
+        why: 'The transcriber decides whether a tune is sung or played by listening for a voice. A hum, or a phone mic held far away, can sound like an instrument to it.',
+      }),
+      'no-notes': () => ({
+        title: 'The score has no sung notes',
+        effect: 'Nothing to sing was found under V: Vocal — the singer has no melody to follow.',
+        todo: ['Transcribe a clip with a clear melody, or clear the score.'],
+        why: 'Rests (z, Z) and chord names don’t give the voice anything to sing.',
+      }),
+    };
+    function applyMelodyFix(issue) {
+      if (issue.fix === 'length') document.querySelector('#duration').value = issue.recommended;
+      else if (issue.fix === 'swap') { const swapped = MelodyCheck.swapVocalAndInstrument(document.querySelector('#abc-score').value); if (swapped) document.querySelector('#abc-score').value = swapped; }
+      else if (issue.fix === 'balanced') document.querySelector('#singing').value = 1;
+      else if (issue.fix === 'trim') { const trimmed = MelodyCheck.trimLeadingRests(document.querySelector('#abc-score').value); if (trimmed) document.querySelector('#abc-score').value = trimmed.abc; }
+      updatePreview();
+      clearTimeout(melodyCheckTimer);
+    }
+    function renderMelodyCheck(flash) {
+      const container = document.querySelector('#melody-check');
+      const summary = document.querySelector('#check-summary');
+      const singing = SINGING[Number(document.querySelector('#singing').value)];
+      const result = MelodyCheck.checkMelody({
+        abc: document.querySelector('#abc-score').value,
+        lyrics: document.querySelector('#lyrics').value,
+        duration: Number(document.querySelector('#duration').value),
+        cot: singing.cot,
+      });
+      const syllableCount = result.syllables.flat().length;
+      const signature = JSON.stringify([result.issues, result.score && [result.score.notes, Math.round(result.score.sungSeconds)], syllableCount, flash || '']);
+      if (signature === melodyCheckSignature) return;
+      melodyCheckSignature = signature;
+      const cards = [];
+      if (flash) cards.push(el('p', 'check-flash', `✓ ${flash}`));
+      for (const issue of result.issues) {
+        const text = CHECK_TEXT[issue.id](issue);
+        const card = el('section', `check-card ${issue.level}`);
+        card.append(el('h4', '', text.title), el('p', 'check-effect', text.effect));
+        if (issue.id === 'short-score' || issue.id === 'melisma') card.append(...syllableFlow(result.syllables, issue.notes));
+        if (issue.id === 'cut-off' || issue.id === 'overhang') card.append(...timeline({ onset: result.score.onsetSeconds || 0, sungEnd: issue.scoreSeconds, duration: issue.duration }));
+        if (issue.id === 'late-start') card.append(...timeline({ onset: issue.onsetSeconds, sungEnd: issue.scoreSeconds, duration: Number(document.querySelector('#duration').value) }));
+        const todo = el('ul', 'check-todo'); text.todo.forEach(item => todo.append(el('li', '', item))); card.append(todo);
+        if (text.fix) { const button = el('button', 'check-fix', text.fix.label); button.type = 'button'; button.onclick = () => { applyMelodyFix(issue); renderMelodyCheck(text.fix.done); }; card.append(button); }
+        const why = el('details', 'check-why'); why.append(el('summary', '', 'Why does this happen?'), el('p', '', text.why)); card.append(why);
+        cards.push(card);
+      }
+      if (result.score && !result.issues.length) {
+        cards.push(el('p', 'check-ok', `✓ Fits: about ${syllableCount} syllables on ${result.score.notes} notes, singing for ~${secondsText(result.score.sungSeconds)} of your ${secondsText(Number(document.querySelector('#duration').value))}.`));
+      }
+      container.replaceChildren(...cards);
+      const warnings = result.issues.filter(issue => issue.level === 'warn').length, tips = result.issues.length - warnings;
+      summary.classList.toggle('hidden', !result.issues.length);
+      summary.classList.toggle('warn', warnings > 0);
+      summary.textContent = warnings
+        ? `Melody check: ${warnings} ${warnings === 1 ? 'problem' : 'problems'} with this score${tips ? ` (+${tips} ${tips === 1 ? 'tip' : 'tips'})` : ''} — you can still create. See why ›`
+        : `Melody check: ${tips} ${tips === 1 ? 'tip' : 'tips'} for this score. See ›`;
+    }
+    document.querySelector('#check-summary').addEventListener('click', () => {
+      // The melody section is nested inside "More sound options"; open every
+      // enclosing panel or the cards stay hidden.
+      for (let node = document.querySelector('#melody-check'); node; node = node.parentElement) if (node.tagName === 'DETAILS') node.open = true;
+      document.querySelector('#melody-check').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
     voiceGrid.addEventListener('change', updatePreview);
     document.querySelector('#quality').addEventListener('change', updatePreview);
     document.querySelector('#background').addEventListener('change', updatePreview);
@@ -344,18 +511,29 @@ Tum Meera ke jaise bulate nahi`,
     const planButton = document.querySelector('#plan-button');
     const planStatus = document.querySelector('#plan-status');
     const scoreField = document.querySelector('#abc-score');
-    async function pollPlanJob(jobId) {
-      const deadline = Date.now() + 120000;
+    // Plan and transcribe jobs both end by filling the score box, so they
+    // share one poller and one busy flag (to keep two client flows from
+    // racing on the same textarea).
+    const transcribeButton = document.querySelector('#transcribe-button');
+    const transcribeStatus = document.querySelector('#transcribe-status');
+    let scoreJobBusy = false, referenceAudio = null;
+    function setScoreJobBusy(busy) {
+      scoreJobBusy = busy;
+      planButton.disabled = busy;
+      transcribeButton.disabled = busy || !referenceAudio;
+    }
+    async function pollScoreJob(jobId, statusEl, { ready, failed, pending, timeoutMs }) {
+      const deadline = Date.now() + timeoutMs;
       while (Date.now() < deadline) {
         const job = await api(`/api/jobs/${jobId}`).then(r => r.json());
-        if (job.status === 'complete') { scoreField.value = job.resultText || ''; planStatus.textContent = 'Draft ready — edit below, then Create music.'; updatePreview(); return; }
-        if (job.status === 'failed') { planStatus.textContent = `Draft failed: ${job.error || 'unknown error'}`; return; }
+        if (job.status === 'complete') { scoreField.value = job.resultText || ''; statusEl.textContent = ready; updatePreview(); return; }
+        if (job.status === 'failed') { statusEl.textContent = `${failed}: ${job.error || 'unknown error'}`; return; }
         await new Promise(resolve => setTimeout(resolve, 2000));
       }
-      planStatus.textContent = 'Still drafting — check back, or try again.';
+      statusEl.textContent = pending;
     }
     planButton.addEventListener('click', async () => {
-      planButton.disabled = true;
+      setScoreJobBusy(true);
       planStatus.textContent = 'Drafting on the laptop…';
       try {
         const duration = Number(document.querySelector('#duration').value);
@@ -367,9 +545,83 @@ Tum Meera ke jaise bulate nahi`,
           cot: singing.cot === 'off' ? 'melody' : singing.cot, lm_seed: -1,
           abc_sampling: { max_tokens: 1024 },
         } }) });
-        await pollPlanJob(id);
+        await pollScoreJob(id, planStatus, { ready: 'Draft ready — edit below, then Create music.', failed: 'Draft failed', pending: 'Still drafting — check back, or try again.', timeoutMs: 120000 });
       } catch (error) { planStatus.textContent = error.message; }
-      finally { planButton.disabled = false; }
+      finally { setScoreJobBusy(false); }
+    });
+
+    // The engine decodes only WAV or MP3, and phones record webm/opus or
+    // m4a. Decode whatever the browser can play and re-encode it as the
+    // 24 kHz mono 16-bit WAV the transcriber resamples to anyway.
+    async function toTranscriberWav(blob) {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      const ctx = new Ctx();
+      let decoded;
+      try { decoded = await ctx.decodeAudioData(await blob.arrayBuffer()); }
+      catch { throw new Error('This browser could not read that audio file. Try an MP3 or WAV.'); }
+      finally { ctx.close(); }
+      const rate = 24000;
+      const offline = new OfflineAudioContext(1, Math.max(1, Math.ceil(decoded.duration * rate)), rate);
+      const source = offline.createBufferSource();
+      source.buffer = decoded; source.connect(offline.destination); source.start();
+      const samples = (await offline.startRendering()).getChannelData(0);
+      const view = new DataView(new ArrayBuffer(44 + samples.length * 2));
+      const text = (offset, value) => { for (let i = 0; i < value.length; i++) view.setUint8(offset + i, value.charCodeAt(i)); };
+      text(0, 'RIFF'); view.setUint32(4, 36 + samples.length * 2, true); text(8, 'WAVE');
+      text(12, 'fmt '); view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, 1, true);
+      view.setUint32(24, rate, true); view.setUint32(28, rate * 2, true); view.setUint16(32, 2, true); view.setUint16(34, 16, true);
+      text(36, 'data'); view.setUint32(40, samples.length * 2, true);
+      for (let i = 0; i < samples.length; i++) view.setInt16(44 + i * 2, Math.max(-1, Math.min(1, samples[i])) * 0x7fff, true);
+      return { wav: new Blob([view], { type: 'audio/wav' }), seconds: decoded.duration };
+    }
+    function setReferenceAudio(blob, label) {
+      referenceAudio = blob;
+      transcribeStatus.textContent = label;
+      setScoreJobBusy(scoreJobBusy);
+    }
+    document.querySelector('#reference-audio').addEventListener('change', event => {
+      const file = event.target.files[0];
+      setReferenceAudio(file || null, file ? `Ready: ${file.name}` : '');
+    });
+    const recordButton = document.querySelector('#record-button');
+    let recorder = null;
+    recordButton.addEventListener('click', async () => {
+      if (recorder) { recorder.stop(); return; }
+      if (!window.MediaRecorder || !navigator.mediaDevices?.getUserMedia) { transcribeStatus.textContent = 'This browser cannot record audio. Upload a file instead.'; return; }
+      let stream;
+      try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
+      catch { transcribeStatus.textContent = 'Microphone permission was not granted.'; return; }
+      const chunks = [], startedAt = Date.now();
+      recorder = new MediaRecorder(stream);
+      recorder.addEventListener('dataavailable', event => { if (event.data.size) chunks.push(event.data); });
+      recorder.addEventListener('stop', () => {
+        stream.getTracks().forEach(track => track.stop());
+        const type = recorder.mimeType;
+        recorder = null;
+        recordButton.textContent = 'Record with mic';
+        document.querySelector('#reference-audio').value = '';
+        setReferenceAudio(new Blob(chunks, { type }), `Recorded ${Math.round((Date.now() - startedAt) / 1000)} s`);
+      });
+      recorder.start();
+      recordButton.textContent = 'Stop recording';
+      transcribeStatus.textContent = 'Recording… sing or hum the melody.';
+    });
+    transcribeButton.addEventListener('click', async () => {
+      if (!referenceAudio) return;
+      setScoreJobBusy(true);
+      transcribeStatus.textContent = 'Preparing audio…';
+      try {
+        const { wav, seconds } = await toTranscriberWav(referenceAudio);
+        if (wav.size > 25 * 1024 * 1024) throw new Error(`That clip is ${Math.round(seconds)} s — too long. Trim it to under 9 minutes.`);
+        const form = new FormData();
+        form.append('meta', JSON.stringify({ kind: 'transcribe', request: { melody_only: true } }));
+        form.append('audio', wav, 'source.wav');
+        transcribeStatus.textContent = 'Uploading…';
+        const { id } = await api('/api/jobs', { method: 'POST', body: form }).then(r => r.json());
+        transcribeStatus.textContent = 'Listening on the laptop…';
+        await pollScoreJob(id, transcribeStatus, { ready: 'Transcribed — edit below, then Create music.', failed: 'Transcription failed', pending: 'Still transcribing — check back, or try again.', timeoutMs: 600000 });
+      } catch (error) { transcribeStatus.textContent = error.message; }
+      finally { setScoreJobBusy(false); }
     });
     document.querySelector('#clear-score-button').addEventListener('click', () => { scoreField.value = ''; planStatus.textContent = ''; updatePreview(); });
 
@@ -405,7 +657,7 @@ Tum Meera ke jaise bulate nahi`,
     async function refreshJobs() {
       try {
         const { jobs: allJobs } = await api('/api/jobs').then(r => r.json());
-        const jobs = allJobs.filter(job => job.kind !== 'plan');
+        const jobs = allJobs.filter(job => job.kind !== 'plan' && job.kind !== 'transcribe');
         hasActiveJobs = jobs.some(job => job.status === 'queued' || job.status === 'running');
         document.querySelector('#connection-status').textContent = hasActiveJobs ? jobs.filter(job => job.status === 'queued' || job.status === 'running').map(job => statusLabels[job.status]).join(' · ') + '. Keep your music computer connected.' : '';
         const snapshot = JSON.stringify(jobs);

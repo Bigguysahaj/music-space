@@ -6,5 +6,9 @@
   "YuE2-Vae-F32.gguf": {
     "bytes": 530497344,
     "sha256": "93e49dfb1970e89ad64cacb17cf13b5d05f6bb30ef7ed3adae3050bcb728638a"
+  },
+  "SheetSage2-Q8_0.gguf": {
+    "bytes": 957571488,
+    "sha256": "4507d8c1d9245f312c0894ea610ab18fbcbf31443764b5bd6a60e4b6df59e973"
   }
 }

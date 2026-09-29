@@ -18,7 +18,11 @@ This file tracks product directions that are interesting but are outside the fir
 - Add a documented CLI and HTTP API for scripts and agents, then consider an MCP adapter.
 - Keep the generation engine replaceable so another local model or generation service can be added later.
 
-## Hum-to-melody (audio reference transcription)
+## Drag-to-fit editor (urgent next addition)
+
+- Let a person drag each syllable onto the notes it should hold, and rewrite the score to one note per syllable. A same-seed A/B on 2026-09-29 made the words clear ("b is clear word for word"). Full handoff in `FIT_EDITOR_SPEC.md`.
+
+## Hum-to-melody (audio reference transcription, built 2026-09-29)
 
 - Let the phone page record a short mic clip (browser MediaRecorder), upload it as a new job kind, and have the laptop bridge run `yue-transcribe` (SheetSage2, needs `SheetSage2-Q8_0.gguf`, ~958 MB, not yet downloaded) to turn the hum into a real ABC score, dropped straight into the score box next to the existing "Draft a melody" flow.
 - This is the deterministic alternative to the "melody character" style presets added 2026-09-25: those only nudge the model with adjectives and do not reliably reproduce a specific named tune (confirmed with Achyutam Keshavam — the preset text alone did not make the output sound like the real bhajan).

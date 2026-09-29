@@ -1,0 +1,22 @@
+{
+  "style": "Devotional Krishna bhajan, joyful congregational singing, warm clear man's voice, light harmonium and tabla, bright and uplifting, brisk skipping tempo, community singalong feel",
+  "lyrics": "[Verse]\nOm Krishnaaya Vaasudevaaya\nHaraye Paramaatmane\nPranatah Klesha Naashaaya\nGovindaaya Namo Namah",
+  "cot": "melody",
+  "duration": 30,
+  "lm_seed": 46,
+  "seed": 46,
+  "steps": 32,
+  "lm_batch_size": 1,
+  "synth_batch_size": 1,
+  "cfg_scale": 1,
+  "output_format": "wav16",
+  "abc_sampling": {
+    "max_tokens": 1024
+  },
+  "semantic_sampling": {
+    "min_tokens": 200,
+    "max_tokens": 750
+  },
+  "abc": "X:1\nT:\nM:2/4\nL:1/32\nQ:1/4=86\nV: Vocal clef=treble name=\"Vocal Melody\" snm=\"Vocal\"\nV: Ins clef=treble name=\"Ins Melody\" snm=\"Inst.\"\nK:F\n% intro\nV: Vocal\nz8f4g4|\nV: Ins\nZ|\n% verse\nV: Vocal\na6a6b4|a6g2f4e4|g6g6a4|a2g6f4g4|\nV: Ins\nZ4|\nV: Vocal\na6a6b4|a6g2f4e4|g6g6a4|a2g6f4e4|\nV: Ins\nZ4|\nV: Vocal\ne4d2d6d4|e4g2g6g4|a4g2g2f4e4|f8f4e4|\nV: Ins\nZ4|\nV: Vocal\ne4d2d6d4|e4g2g6g4|a4g2g2f4e4|f16|\nV: Ins\nZ4|\nV: Vocal\nf12f2g2|f4f2g2f4f2g2|f12f2g2|f4f2g2z8|\nV: Ins\nZ4|\n",
+  "_test": "A: transcribed tune, notes as-is (melisma)"
+}

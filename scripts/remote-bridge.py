@@ -20,7 +20,7 @@ if not TOKEN:
 POLL_SECONDS = max(1, int(os.environ.get("MUSIC_SPACE_POLL_SECONDS", "10")))
 
 
-def call(path, *, method="GET", body=None, content_type="application/json", timeout=30):
+def call(path, *, method="GET", body=None, content_type="application/json", timeout=30, raw=False):
     data = body
     if isinstance(body, (dict, list)):
         data = json.dumps(body).encode()
@@ -30,6 +30,8 @@ def call(path, *, method="GET", body=None, content_type="application/json", time
     request = Request(BASE_URL + path, data=data, headers=headers, method=method)
     with urlopen(request, timeout=timeout) as response:
         payload = response.read()
+        if raw:
+            return payload
         return json.loads(payload) if payload else {}
 
 
@@ -67,6 +69,39 @@ def handle_plan(job, request_path, log_path):
         )
         print(f"Uploaded score for job {job_id}")
     finally:
+        score_path.unlink(missing_ok=True)
+
+
+def handle_transcribe(job, request_path, log_path):
+    job_id = job["id"]
+    source_path = ROOT / "outputs" / f"remote-{job_id}-source.wav"
+    score_path = ROOT / "outputs" / f"remote-{job_id}.abc"
+    melody_only = "false" if job["request"].get("melody_only") is False else "true"
+    try:
+        source_path.write_bytes(call(f"/api/bridge/jobs/{job_id}/source", content_type=None, timeout=180, raw=True))
+        with log_path.open("w", encoding="utf-8") as log:
+            result = subprocess.run(
+                ["bash", str(ROOT / "scripts/transcribe.sh"), str(source_path), melody_only, str(score_path)],
+                cwd=ROOT,
+                stdout=subprocess.DEVNULL,
+                stderr=log,
+                check=False,
+            )
+        if result.returncode:
+            tail = log_path.read_text(encoding="utf-8", errors="replace")[-3000:]
+            raise RuntimeError(f"Transcription exited with status {result.returncode}. {tail}")
+        if not score_path.exists():
+            raise RuntimeError("Transcription finished but no score file was found.")
+        call(
+            f"/api/bridge/jobs/{job_id}/score",
+            method="PUT",
+            body=score_path.read_text(encoding="utf-8").encode("utf-8"),
+            content_type="text/plain; charset=utf-8",
+            timeout=60,
+        )
+        print(f"Uploaded transcribed score for job {job_id}")
+    finally:
+        source_path.unlink(missing_ok=True)
         score_path.unlink(missing_ok=True)
 
 
@@ -114,6 +149,8 @@ def handle(job):
     try:
         if kind == "plan":
             handle_plan(job, request_path, log_path)
+        elif kind == "transcribe":
+            handle_transcribe(job, request_path, log_path)
         else:
             handle_generate(job, request_path, log_path)
     except (OSError, URLError, HTTPError, RuntimeError, KeyError, ValueError) as error:
