@@ -1,6 +1,6 @@
 # Feature spec: drag-to-fit editor (fit the words to the notes)
 
-**Priority: urgent — the next thing to build.** Handoff for an agent with
+**Status 2026-09-30: built locally, not deployed, not committed.** Logic `cloudflare/public/assets/fit-editor.js` (tests `cloudflare/test/fit-editor.test.cjs`), UI `fit-editor-ui.js` + `fit-editor.css`, browser smoke `cloudflare/test/smoke-fit-editor.mjs`. Still open: the listening check (§9.3), section alignment (§8.4), editing syllable splits (§8.5), one tune line per lyric line when a whole verse sits on one line. Original priority note: urgent. Handoff for an agent with
 repo access to `/home/bigguysahaj/github/music-space` (Raagspace: a phone
 page on Cloudflare that queues jobs for a laptop running YuE2 via
 `yue2.cpp`). Read all of it before designing; §3 are hard facts about the
@@ -233,6 +233,24 @@ like that animation became something you can touch.
    drag-the-edge after trying it (e.g. tap-to-assign, or dragging notes
    onto syllables), make the case and build that instead — the goal is the
    B result with the tune kept, reached easily on a phone.
+
+### 8.1 answered (2026-09-30, listening by the user)
+
+Same seed/style/length as take B; only the Vocal notation changed (`node cloudflare/test/fit-tie-slur-prototype.cjs`).
+
+| Take | Score | Verdict |
+|---|---|---|
+| B `outputs/krishna-20260929-173157-65661.wav` | notes merged blindly, tune flattened | "a group of kids singing in different rhythm" - cool, but sits too far from the intended direction |
+| C `outputs/krishna-20260930-164741-3444.wav` | original tune, grouped 9/8/8/8 with slurs + ties | clear |
+| E `outputs/krishna-20260930-164820-3468.wav` | original tune, **ties only** (same-pitch merges), 46 notes | clearer and better; overall favourite |
+
+What it means for the design:
+- **Ties work and are lossless.** Tying repeated pitches keeps every note and the whole tune, and gave the best take. So the editor's first, default move is "tie repeats" (safe, preview-free), not merging.
+- **Slurs are clear but not better than ties**, so they are an optional tool, not the main one.
+- **Merging into one held note (B) is the lossy last resort**; it changed the feel of the singing. Keep it, but behind the gentler options and label it as changing the tune.
+- **Exact 1:1 is not required.** E asked for 46 notes against 33 syllables and was clear; the model sang 50. "Close enough" should count as fitting.
+- Not a fair A/B against A: A's group-chanting voices are a taste, not a failure. Lyric tweaking (spelling, syllable breaks) is a separate lever that helps every take.
+- `analyzeScore` counts slurred notes individually (ties as one); it needs slur awareness before the editor counts syllable groups.
 
 ## 9. Acceptance criteria
 

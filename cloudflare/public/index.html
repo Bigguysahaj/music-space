@@ -6,6 +6,7 @@
   <meta name="theme-color" content="#FAF4E7">
   <title>Raagspace · Plant a sound</title>
   <link rel="stylesheet" href="/assets/garden.css">
+  <link rel="stylesheet" href="/assets/fit-editor.css">
 </head>
 <body>
   <svg style="display:none" aria-hidden="true"><symbol id="i-person" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8"/></symbol></svg>
@@ -84,6 +85,7 @@ Govindaaya Namo Namah</textarea>
             higher. <code>V: Vocal</code> / <code>V: Ins</code> switch which line you're editing — delete leading
             <code>Z</code> rests under <code>V: Vocal</code> to make the voice come in sooner.
           </p>
+          <div id="fit-editor-host"></div>
           <p><button type="button" id="clear-score-button" class="muted" style="background:transparent;border:1px solid #40564a;color:#c4d3c9">Clear (let the model plan it)</button></p>
           <div id="melody-check" aria-live="polite"></div>
         </details>
@@ -121,6 +123,8 @@ Govindaaya Namo Namah</textarea>
     <section class="panel library" id="library"><h2>Your music</h2><p id="connection-status" class="muted" role="status"></p><div id="jobs"><p class="muted">Loading…</p></div></section>
   </main>
   <script src="/assets/melody-check.js"></script>
+  <script src="/assets/fit-editor.js"></script>
+  <script src="/assets/fit-editor-ui.js"></script>
   <script>
     const key = 'music-space-password';
     const loginPanel = document.querySelector('#login-panel');
@@ -287,8 +291,17 @@ Tum Meera ke jaise bulate nahi`,
       document.querySelector('#cfg-scale-value').textContent = Number(document.querySelector('#cfg-scale').value).toFixed(1);
       updateVerifiedScoreRow();
       scheduleMelodyCheck();
+      if (typeof fitEditor !== 'undefined') fitEditor.scoreChanged();
     }
     document.querySelector('#duration').addEventListener('input', () => scheduleMelodyCheck());
+    // The drag-to-fit editor (assets/fit-editor*.js) lives under the score box.
+    const fitEditor = FitEditorUI.mount({
+      host: document.querySelector('#fit-editor-host'),
+      getAbc: () => document.querySelector('#abc-score').value,
+      setAbc: value => { document.querySelector('#abc-score').value = value; },
+      getLyrics: () => document.querySelector('#lyrics').value,
+      onApplied: () => { updatePreview(); renderMelodyCheck('Words fitted to the notes'); },
+    });
 
     // --- Melody check ----------------------------------------------------
     // Warns, never blocks: explains how the score, the lyrics and Length
@@ -425,6 +438,7 @@ Tum Meera ke jaise bulate nahi`,
         if (issue.id === 'cut-off' || issue.id === 'overhang') card.append(...timeline({ onset: result.score.onsetSeconds || 0, sungEnd: issue.scoreSeconds, duration: issue.duration }));
         if (issue.id === 'late-start') card.append(...timeline({ onset: issue.onsetSeconds, sungEnd: issue.scoreSeconds, duration: Number(document.querySelector('#duration').value) }));
         const todo = el('ul', 'check-todo'); text.todo.forEach(item => todo.append(el('li', '', item))); card.append(todo);
+        if (issue.id === 'short-score' || issue.id === 'melisma') { const fit = el('button', 'check-fix check-fit', 'Fit words to notes'); fit.type = 'button'; fit.onclick = () => { if (fitEditor.open()) document.querySelector('#fit-editor-host').scrollIntoView({ behavior: 'smooth', block: 'start' }); }; card.append(fit); }
         if (text.fix) { const button = el('button', 'check-fix', text.fix.label); button.type = 'button'; button.onclick = () => { applyMelodyFix(issue); renderMelodyCheck(text.fix.done); }; card.append(button); }
         const why = el('details', 'check-why'); why.append(el('summary', '', 'Why does this happen?'), el('p', '', text.why)); card.append(why);
         cards.push(card);

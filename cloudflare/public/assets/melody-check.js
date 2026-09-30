@@ -57,43 +57,52 @@
     return first ? lengthOf(first[1], first[2], first[3]) : 1;
   }
 
-  // Walks the Vocal voice (or the first voice when none is named Vocal) and
-  // returns its sung notes, total length and when the first note starts.
-  // `voicePattern` picks another voice to measure, e.g. /^ins/i.
-  function analyzeScore(abc, voicePattern = /^vocal/i) {
-    const text = String(abc || '');
-    if (!text.trim()) return null;
-    let unit = null, meter = 1, beat = 0.25, bpm = 120, voice = null, firstVoice = null, inBody = false;
+  // Reads the header fields and the music lines (with their voice and line
+  // number) of an ABC score. Shared by analyzeScore and the fit editor so
+  // both agree on L:, M:, Q: and which line belongs to which voice.
+  function readScore(text) {
+    let unit = null, meter = 1, beat = 0.25, bpm = 120, key = 'C', voice = null, firstVoice = null, inBody = false;
     const events = [];
-    const lines = text.split('\n');
-    for (const line of lines) {
+    text.split('\n').forEach((line, index) => {
       const trimmed = line.trim();
-      if (!trimmed || trimmed.startsWith('%')) continue;
+      if (!trimmed || trimmed.startsWith('%')) return;
       const field = /^([A-Za-z]):\s*(.*)$/.exec(trimmed);
       if (field) {
-        const [, key, value] = field;
-        if (key === 'M') meter = /^C\|?$/.test(value.trim()) ? 1 : fraction(value, 1);
-        else if (key === 'L') unit = fraction(value, null);
-        else if (key === 'Q') {
+        const [, name, value] = field;
+        if (name === 'M') meter = /^C\|?$/.test(value.trim()) ? 1 : fraction(value, 1);
+        else if (name === 'L') unit = fraction(value, null);
+        else if (name === 'Q') {
           const tempo = /(?:(\d+\s*\/\s*\d+)\s*=\s*)?(\d+)/.exec(value);
           if (tempo) { if (tempo[1]) beat = fraction(tempo[1], 0.25); else beat = null; bpm = Number(tempo[2]); }
-        } else if (key === 'K') inBody = true;
-        else if (key === 'V') {
+        } else if (name === 'K') { inBody = true; if (!events.length) key = value.trim() || 'C'; }
+        else if (name === 'V') {
           voice = value.trim().split(/\s+/)[0];
           if (inBody && !firstVoice) firstVoice = voice;
         }
-        continue;
+        return;
       }
-      if (!inBody) continue;
-      events.push({ voice, line: trimmed });
-    }
+      if (!inBody) return;
+      events.push({ voice, line: trimmed, index });
+    });
     if (unit === null) unit = meter >= 0.75 ? 1 / 8 : 1 / 16;
     if (beat === null) beat = unit;
+    return { unit, meter, beat, bpm, key, events, firstVoice };
+  }
+
+  // Walks the Vocal voice (or the first voice when none is named Vocal) and
+  // returns its sung notes, total length and when the first note starts.
+  // `voicePattern` picks another voice to measure, e.g. /^ins/i. A tie or a
+  // slur joins notes into one sung note, since the model sings a slurred
+  // group on one syllable.
+  function analyzeScore(abc, voicePattern = /^vocal/i) {
+    const text = String(abc || '');
+    if (!text.trim()) return null;
+    const { unit, meter, beat, bpm, events, firstVoice } = readScore(text);
     const match = events.find(e => voicePattern.test(e.voice || ''));
     const target = match ? match.voice : (voicePattern.source === '^vocal' ? firstVoice || null : undefined);
     const barUnits = meter / unit;
-    const token = /"[^"]*"|![^!]*!|\[[A-Za-z]:[^\]]*\]|\((\d)|\[([^\]]*)\](\d*)(\/*)(\d*)|([\^=_]*)([A-Ga-g])([,']*)(\d*)(\/*)(\d*)|([zx])(\d*)(\/*)(\d*)|([ZX])(\d*)|(-)/g;
-    let units = 0, notes = 0, onset = null, lastEnd = 0, tied = false, tuplet = 0, tupletScale = 1;
+    const token = /"[^"]*"|![^!]*!|\[[A-Za-z]:[^\]]*\]|\((\d)|\[([^\]]*)\](\d*)(\/*)(\d*)|([\^=_]*)([A-Ga-g])([,']*)(\d*)(\/*)(\d*)|([zx])(\d*)(\/*)(\d*)|([ZX])(\d*)|(-)|(\()|(\))/g;
+    let units = 0, notes = 0, onset = null, lastEnd = 0, tied = false, tuplet = 0, tupletScale = 1, slurDepth = 0, slurSung = false;
     for (const event of events) {
       if (event.voice !== target) continue;
       for (const m of event.line.replace(/%.*$/, '').matchAll(token)) {
@@ -103,13 +112,16 @@
           // A chord [CEG]2 lasts as long as its first note times its suffix.
           const length = m[2] !== undefined ? innerLength(m[2]) * lengthOf(m[3], m[4], m[5]) : lengthOf(m[9], m[10], m[11]);
           if (onset === null) onset = units;
-          if (!tied) notes++;
+          if (!tied && !(slurDepth > 0 && slurSung)) notes++;
+          if (slurDepth > 0) slurSung = true;
           tied = false;
           units += length * scale();
           lastEnd = units;
         } else if (m[12]) { units += lengthOf(m[13], m[14], m[15]) * scale(); tied = false; }
         else if (m[16]) { units += (m[17] ? Number(m[17]) : 1) * barUnits; tied = false; }
         else if (m[18]) tied = true;
+        else if (m[19]) { if (slurDepth === 0) slurSung = false; slurDepth++; }
+        else if (m[20]) slurDepth = Math.max(0, slurDepth - 1);
       }
     }
     const secondsPerUnit = (unit / beat) * (60 / bpm);
@@ -243,7 +255,7 @@
     return items.flatMap(item => item.header ? [item.header, ...item.content] : [item.line]).join('\n');
   }
 
-  const api = { splitSyllables, analyzeScore, checkMelody, trimLeadingRests, swapVocalAndInstrument };
+  const api = { splitSyllables, readScore, analyzeScore, checkMelody, trimLeadingRests, swapVocalAndInstrument };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.MelodyCheck = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);
