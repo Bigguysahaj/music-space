@@ -30,9 +30,8 @@ This file tracks product directions that are interesting but are outside the fir
 
 ## Remote use
 
-- Next up (2026-10-02): song delete on the phone page (see the delete item below), then push `main` to origin.
 - The initial phone-to-laptop prototype uses a hosted control page and an outbound-only laptop connector. The laptop makes HTTPS requests to the hosted service, picks up a queued job, generates audio locally, then uploads the result. It does not accept inbound connections or run a public generation server.
 - A later hosted connector architecture could support several computers or model backends, provided access control and private audio storage are designed first.
 - Review retention controls, job cleanup, reconnect behavior, and account authentication before treating the remote service as a dependable personal app.
-- Add a way to delete songs from the phone page: at minimum a "delete all" action, ideally per-song delete too. Needs a DELETE route in `cloudflare/src/index.js` that removes the D1 `jobs` row and the matching Workers KV `AUDIO` blob (`audio_key`); currently there is no delete endpoint or UI for this at all, only manual `wrangler d1 execute` / `wrangler kv key delete`.
+- Deprioritized (user, 2026-10-02): add a way to delete songs from the phone page: at minimum a "delete all" action, ideally per-song delete too. Needs a DELETE route in `cloudflare/src/index.js` that removes the D1 `jobs` row and the matching Workers KV `AUDIO` blob (`audio_key`); currently there is no delete endpoint or UI for this at all, only manual `wrangler d1 execute` / `wrangler kv key delete`.
 - Move the personal prototype's audio from Workers KV to R2 if the 1 GB free KV storage allowance becomes limiting. R2 requires activation through Cloudflare checkout even though it has a free allowance.
