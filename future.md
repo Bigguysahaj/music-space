@@ -21,15 +21,16 @@ This file tracks product directions that are interesting but are outside the fir
 ## Drag-to-fit editor (built, commit c2a67bd)
 
 - Drag each syllable onto the notes it should hold; the score is rewritten to one note per syllable, with tie/slur fitting and a notation view. Spec and findings in `FIT_EDITOR_SPEC.md`.
-- Still to do: deploy it (see Remote use) and confirm on a real phone.
+- Deployed 2026-10-02 (Worker version f5f22f38; assets were already current). Still to do: confirm on a real phone.
 
 ## Hum-to-melody (built 2026-09-29, job kind `transcribe`)
 
 - Done: `SheetSage2-Q8_0.gguf` downloaded, `yue-transcribe` built, worker route, D1 migration `0003` (applied remotely), bridge handler, mic/upload UI, in-browser WAV conversion, melody-check warnings. Melody checked by ear by the user.
-- Open: confirm the Worker is deployed with the latest code and test on a real phone; a transcribed intro stays as leading rests (the "Trim the intro" button is the workaround).
+- Open: test on a real phone; a transcribed intro stays as leading rests (the "Trim the intro" button is the workaround).
 
 ## Remote use
 
+- Next up (2026-10-02): song delete on the phone page (see the delete item below), then push `main` to origin.
 - The initial phone-to-laptop prototype uses a hosted control page and an outbound-only laptop connector. The laptop makes HTTPS requests to the hosted service, picks up a queued job, generates audio locally, then uploads the result. It does not accept inbound connections or run a public generation server.
 - A later hosted connector architecture could support several computers or model backends, provided access control and private audio storage are designed first.
 - Review retention controls, job cleanup, reconnect behavior, and account authentication before treating the remote service as a dependable personal app.
