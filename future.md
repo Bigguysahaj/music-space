@@ -18,16 +18,15 @@ This file tracks product directions that are interesting but are outside the fir
 - Add a documented CLI and HTTP API for scripts and agents, then consider an MCP adapter.
 - Keep the generation engine replaceable so another local model or generation service can be added later.
 
-## Drag-to-fit editor (urgent next addition)
+## Drag-to-fit editor (built, commit c2a67bd)
 
-- Let a person drag each syllable onto the notes it should hold, and rewrite the score to one note per syllable. A same-seed A/B on 2026-09-29 made the words clear ("b is clear word for word"). Full handoff in `FIT_EDITOR_SPEC.md`.
+- Drag each syllable onto the notes it should hold; the score is rewritten to one note per syllable, with tie/slur fitting and a notation view. Spec and findings in `FIT_EDITOR_SPEC.md`.
+- Still to do: deploy it (see Remote use) and confirm on a real phone.
 
-## Hum-to-melody (audio reference transcription, built 2026-09-29)
+## Hum-to-melody (built 2026-09-29, job kind `transcribe`)
 
-- Let the phone page record a short mic clip (browser MediaRecorder), upload it as a new job kind, and have the laptop bridge run `yue-transcribe` (SheetSage2, needs `SheetSage2-Q8_0.gguf`, ~958 MB, not yet downloaded) to turn the hum into a real ABC score, dropped straight into the score box next to the existing "Draft a melody" flow.
-- This is the deterministic alternative to the "melody character" style presets added 2026-09-25: those only nudge the model with adjectives and do not reliably reproduce a specific named tune (confirmed with Achyutam Keshavam — the preset text alone did not make the output sound like the real bhajan).
-- While a hum is recording/uploading/transcribing, the main "Send to laptop" / "Draft a melody" controls should be disabled — the laptop's single GPU generation slot can't run a transcription and a synthesis job at once.
-- Needs: a new job `kind: 'hum'` end to end (worker route + D1 + bridge handler, mirroring the `plan` kind added 2026-09-25), a mic-recording UI control, and building `yue-transcribe` plus fetching the transcriber model.
+- Done: `SheetSage2-Q8_0.gguf` downloaded, `yue-transcribe` built, worker route, D1 migration `0003` (applied remotely), bridge handler, mic/upload UI, in-browser WAV conversion, melody-check warnings. Melody checked by ear by the user.
+- Open: confirm the Worker is deployed with the latest code and test on a real phone; a transcribed intro stays as leading rests (the "Trim the intro" button is the workaround).
 
 ## Remote use
 
